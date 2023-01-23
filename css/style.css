@@ -4,10 +4,6 @@ html {
 }
 
 canvas {
-    width: 800;
-    height: 800;
-    // margin: 0 auto;
     border: 1px solid black;
-    display: block;
-    margin: 0 auto;
+ 
 }

@@ -1,15 +1,29 @@
 ﻿var screenWidth = 800;
 var screenHeight = 800;
+var windowWidth=document.documentElement.clientWidth;
+var windowHeight=document.documentElement.clientHeight;
 var canvasWidth = 800;
 var canvasHeight = 800;
+var mapWidth = screenWidth * 4;
+var mapHeight = screenHeight * 4;
+var canvas = null;
 var context = null;
 var mapSize = 40;
-
+var oldMouseX = null;
+var oldMouseY = null;
+var flagOldMouse = false;
 var imageArr = new Map();
-var nameImageArr=["body0","body1",'tower4','wall'];
+var nameImageArr=["body0","body1",'tower4','wall','water'];
 var imageLoad = false;
 var countLoadImage = 0;
 var panzerArr = [];
+var blockageArr = [];
+var map = {
+    x:1,
+    y:1,
+    width: mapWidth,//canvasWidth,
+    height: mapHeight,//canvasHeight,
+}
 var camera = {
     x:1,
     y:1,
@@ -24,8 +38,8 @@ function Panzer(command,xMap,yMap)
     this.command = command;
     this.width = 35;
     this.height = 35;
-    this.x = xMap * mapSize;
-    this.y = yMap * mapSize;
+    this.x = xMap * mapSize+(mapSize/2-this.width/2);
+    this.y = yMap * mapSize+(mapSize/2-this.height/2);
     this.bodyNameImage = this.command == 0 ? 'body0' : 'body1';
     this.towerNameImage = 'tower4';
     this.angleBody = 90;
@@ -63,6 +77,26 @@ function Panzer(command,xMap,yMap)
         context.rotate(this.angleTower*Math.PI/180);
         context.drawImage(imageArr.get(this.towerNameImage),-this.mixTowerX,-this.mixTowerY);
         context.restore();
+    }
+}
+function Blockage(type,xMap,yMap)// класс препятствие
+{
+    this.type = type;
+    this.xMap = xMap;
+    this.yMap = yMap;
+    this.x = xMap * mapSize;
+    this.y = yMap * mapSize;
+    this.nameImage = null;
+    switch (this.type)
+    {
+        case 'wall': this.nameImage = 'wall'; break;
+        case 'water':   this.nameImage = 'water'; break;
+        case 0:   this.nameImage = 'wall'; break;
+        case 1:   this.nameImage = 'water'; break;
+    }
+    this.draw=function (context,camera,scale=1)
+    {
+        drawSprite(context,imageArr.get(this.nameImage),this.x,this.y,camera,scale)
     }
 }
 //function drawPanzer(context,panzer,camera,scale)// функция рисования танка вместе с башней
@@ -120,8 +154,60 @@ window.addEventListener('load', function () {
     preload();
     create();
     setInterval(drawAll, 60);
+    setInterval(update, 60);
 
 });
+window.onresize = function()
+{
+    updateSize()
+}
+function updateSize()
+{
+    windowWidth=document.documentElement.clientWidth;
+    windowHeight=document.documentElement.clientHeight;
+    let mult =1;
+    if (windowWidth>=windowHeight)
+    {
+        canvasWidth = /*canvas.width = */windowHeight;//*screenWidth/screenHeight;
+        canvasHeight = /*canvas.height = */windowHeight;
+        //if (canvasWidth>windowWidth)
+        //{
+        //    mult = windowWidth/canvasWidth;
+        //   // canvas.width =
+        //        canvasWidth *= mult;
+        //    //canvas.height =
+        //        canvasHeight *= mult;
+        //}
+        canvasWidthMore = true;
+    }
+    else
+    {
+        canvasWidthMore = false;
+        canvasWidth = /*canvas.width*/  windowWidth;
+        canvasHeight = /*canvas.height*/  windowWidth;//*screenHeight/screenWidth;
+    }
+    
+    canvas.setAttribute('width',canvasWidth);
+    canvas.setAttribute('height',canvasHeight);
+    canvas.style.setProperty('left', (window.innerWidth - canvas.width)/2 + 'px'); 
+    canvas.style.setProperty('top', (window.innerHeight - canvas.height) / 2 + 'px'); 
+    if (canvasWidthMore==true)
+    {
+        context.scale(windowHeight / screenHeight * mult, windowHeight / screenHeight * mult);   
+        mouseMultX = windowHeight / screenHeight * mult;
+        mouseMultY = windowHeight / screenHeight * mult;
+    }
+    else
+    {
+       context.scale(windowWidth/screenWidth,windowWidth/screenWidth);
+        mouseMultX = windowWidth / screenWidth;
+        mouseMultY = windowWidth / screenWidth;
+    }
+    //setOffsetMousePosXY((window.innerWidth - canvas.width)/2,
+    //                        (window.innerHeight - canvas.height)/2);
+    //camera.width = canvasWidth;
+    //camera.height = canvasHeight;
+}
 function preload()
 {
     loadImageArr();
@@ -132,13 +218,32 @@ function create()
 {
     canvas = document.getElementById("canvas");
     context = canvas.getContext("2d");
+    initKeyboardAndMouse();
+    updateSize();
     //context.scale(0.1, 0.1);
-    var panzer = new Panzer(0, 1, 1);
-   // panzer.draw(context,camera,1);
-    panzerArr.push(panzer);
-    var panzer = new Panzer(1, 2, 2);
-   // panzer.draw(context,camera,1);
-    panzerArr.push(panzer);
+    for (let i = 0; i < screenHeight / mapSize;i++)
+    {
+        var panzer = new Panzer(0, 1, i);
+       // panzer.draw(context,camera,1);
+        panzerArr.push(panzer);
+    }
+    for (let i = 0; i < screenWidth / mapSize;i++)
+    {
+        var panzer = new Panzer(0, i, 1);
+       // panzer.draw(context,camera,1);
+        panzerArr.push(panzer);
+    }
+    for (let i = 0; i < 1500;i++)
+    {
+        let xMap = randomInteger(0,map.width/mapSize);
+        let yMap = randomInteger(0,map.height/mapSize);
+        var blockage = new Blockage(randomInteger(0,1),xMap,yMap)
+        // panzer.draw(context,camera,1);
+        blockageArr.push(blockage);
+    }
+   // var panzer = new Panzer(1, 2, 2);
+   //// panzer.draw(context,camera,1);
+   // panzerArr.push(panzer);
 }
 function drawAll()
 {
@@ -148,8 +253,45 @@ function drawAll()
     {
         panzerArr[i].draw(context,camera,1);
     }
+    for (let i = 0; i < blockageArr.length;i++)
+    {
+        blockageArr[i].draw(context,camera,1);
+    }
+}
+function drawSprite(context,image,x,y,camera,scale)// функция вывода спрайта на экран
+{
+    if(!context || !image) return;
+    context.save();
+    context.scale(scale,scale);
+    context.drawImage(image,x-camera.x,y-camera.y);
+    context.restore();
 }
 function update()
 {
+    if (mouseLeftPress==true)
+    {
+      
+        if (flagOldMouse==false)
+        {
+            
+            flagOldMouse = true;
+        }
+        else
+        {
+            if (camera.x > 0) camera.x -= mouseX - oldMouseX; else camera.x = 1;
+            if (camera.y>0)camera.y -= mouseY - oldMouseY; else camera.y = 1;
+
+        }
+        oldMouseX = mouseX;
+        oldMouseY = mouseY;
+    }
+    else
+    {
+        flagOldMouse = false;
+    }
+    if (mouseY>screenWidth)
+    {
+        camera.x++;
+    }
 
 }
