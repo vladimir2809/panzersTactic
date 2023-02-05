@@ -4,8 +4,8 @@ var windowWidth=document.documentElement.clientWidth;
 var windowHeight=document.documentElement.clientHeight;
 var canvasWidth = 800;
 var canvasHeight = 800;
-var mapWidth = screenWidth * 2;
-var mapHeight = screenHeight * 2;
+var mapWidth = screenWidth * 12;
+var mapHeight = screenHeight * 12;
 var canvas = null;
 var context = null;
 var mapSize = 40;
@@ -18,6 +18,8 @@ var imageLoad = false;
 var countLoadImage = 0;
 var panzerArr = [];
 var blockageArr = [];
+let speedMoveCamera = { x: 0, y: 0 };
+let showDownCamera = 0.2;
 var map = {
     x:1,
     y:1,
@@ -268,69 +270,112 @@ function drawSprite(context,image,x,y,camera,scale)// функция вывод�
 }
 function update()
 {
-    if (mouseLeftPress==true)
+    showDownCamera = 0.5;
+    if (mouseLeftPress==true)// если нажата левая кнопка мыши
     {
       
-        if (flagOldMouse==false)
+        if (flagOldMouse==false)// 
         {
             
             flagOldMouse = true;
         }
         else
         {
-            if (camera.x-(mouseX - oldMouseX) > 0)
+            //speedMoveCamera = { x: 0, y: 0 };
+            if (mouseInCanvas==true)// если мышь в канвасе
             {
-               camera.x -= mouseX - oldMouseX; 
-            } 
-
-            if (camera.x-(mouseX - oldMouseX) < map.width-camera.width)
-            {
-               camera.x -= mouseX - oldMouseX; 
+                let dist = calcDist(mouseX, mouseY, oldMouseX, oldMouseY);// считаем растояние пройденые мышью
+                if (dist>15)
+                {
+                    // вычесляем множитель для ускорения камеры
+                    let mult = 1;
+                    if (dist > 20) mult = 0.65;
+                    if (dist > 30) mult = 0.45;
+                    // присвоеваем ускорение камере
+                    speedMoveCamera.x = (mouseX - oldMouseX) * mult;
+                    speedMoveCamera.y = (mouseY - oldMouseY) * mult;
+                }
+                else    // если игрок держит левую кнопкку мыши и не перемешает курсор
+                {
+                    moveCamera(mouseX - oldMouseX, mouseY - oldMouseY);
+                }
             }
-            
-            if (camera.y-(mouseY - oldMouseY)>0  )
-            {
-                camera.y -= mouseY - oldMouseY;
-            } 
-
-            if (camera.y-(mouseY - oldMouseY)<map.height -camera.height )
-            {
-                camera.y -= mouseY - oldMouseY;
-            }
-            if (camera.x < 0) 
-            {
-                camera.x = 1;
-            }
-
-          
-            if (camera.y < 0) 
-            {
-                camera.y = 1;
-            }
-
            
-            if (camera.x >map.width-camera.width) 
-            {
-                camera.x = map.width-camera.width-1;
-            }
-
-          
-            if (camera.y > map.height -camera.height) 
-            {
-                camera.y = map.height-camera.height-1;
-            }
 
         }
+        // вычеслияем старые координаты мыши
         oldMouseX = mouseX;
         oldMouseY = mouseY;
     }
-    else
+    else// кнопка мыши отпушена
     {
         flagOldMouse = false;
+        moveCamera(speedMoveCamera.x,speedMoveCamera.y);//перемешаем камеры
+
+        // уменьшаем ускорение камеры
+        if (speedMoveCamera.x>0)
+        {
+            speedMoveCamera.x -= showDownCamera;
+            if (speedMoveCamera.x < 0) speedMoveCamera.x = 0;
+        }
+        if (speedMoveCamera.x<0)
+        {
+            speedMoveCamera.x += showDownCamera;
+            if (speedMoveCamera.x > 0) speedMoveCamera.x = 0;
+        }
+        if (speedMoveCamera.y>0)
+        {
+            speedMoveCamera.y -= showDownCamera;
+            if (speedMoveCamera.y < 0) speedMoveCamera.y = 0;
+        }
+        if (speedMoveCamera.y<0)
+        {
+            speedMoveCamera.y += showDownCamera;
+            if (speedMoveCamera.y > 0) speedMoveCamera.y = 0;
+        }
     }
-    if (mouseY>screenWidth)
+}
+function moveCamera(speedX,speedY)
+{
+    if (camera.x-speedX > 0)
     {
-        camera.x++;
+        camera.x -= speedX; 
+    } 
+
+    if (camera.x-speedX < map.width-camera.width)
+    {
+        camera.x -= speedX; 
+    }
+            
+    if (camera.y-speedY>0  )
+    {
+        camera.y -= speedY;
+    } 
+
+    if (camera.y-speedY<map.height -camera.height )
+    {
+        camera.y -= speedY;
+    }
+    if (camera.x < 0) 
+    {
+        camera.x = 1;
     }
 
+          
+    if (camera.y < 0) 
+    {
+        camera.y = 1;
+    }
+
+           
+    if (camera.x >map.width-camera.width) 
+    {
+        camera.x = map.width-camera.width-1;
+    }
+
+          
+    if (camera.y > map.height -camera.height) 
+    {
+        camera.y = map.height-camera.height-1;
+    }
 }

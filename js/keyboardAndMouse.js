@@ -4,10 +4,13 @@ var keyUpArr=[];
 var gameKeyArr=[];
 var mouseX=250;
 var mouseY=250;
+var mouseOfsX = 0;
+var mouseOfsY = 0;
 var mouseMultX = 1;
 var mouseMultY = 1;
 var mouseLeftPress=false;
 var mouseClick=false;
+let mouseInCanvas = false;
 var wheelDelta=0;
 function initKeyboardAndMouse(keyArr)// инициализировать переменные для работы с клавиатурой и мышью
 {
@@ -37,14 +40,23 @@ function initKeyboardAndMouse(keyArr)// инициализировать пер�
           }
     });
     window.addEventListener('mousemove', function (e) {
-        let mouseOfsX=(window.innerWidth - canvas.width)/2
-        let mouseOfsY=(window.innerHeight - canvas.height)/2;
+        mouseOfsX=(window.innerWidth - canvas.width)/2
+        mouseOfsY=(window.innerHeight - canvas.height)/2;
         mouseX = (event.clientX-mouseOfsX)/mouseMultX;
         mouseY = (event.clientY-mouseOfsY)/mouseMultY;
 
         //mouseX=e.pageX - e.target.offsetLeft;//event.clientX;
         //mouseY=e.pageY - e.target.offsetTop;//event.clientY;
-        console.log("mX:"+mouseX+" mY:"+mouseY)
+        if (event.clientX < mouseOfsX || event.clientX > mouseOfsX + canvas.width ||
+            event.clientY < mouseOfsY || event.clientY > mouseOfsY + canvas.height)
+        {
+            mouseInCanvas = false;
+        }
+        else 
+        {
+            mouseInCanvas = true;
+        }
+        console.log("mX:" + mouseX + " mY:" + mouseY + ' mouseInCanvas:' + (mouseInCanvas == true ? "YES" : "NO"));
     });
     window.addEventListener('mousedown', function () {
         if (event.which==1) mouseLeftPress=true;
