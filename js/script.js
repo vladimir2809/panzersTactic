@@ -4,8 +4,8 @@ var windowWidth=document.documentElement.clientWidth;
 var windowHeight=document.documentElement.clientHeight;
 var canvasWidth = 800;
 var canvasHeight = 800;
-var mapWidth = screenWidth * 4;
-var mapHeight = screenHeight * 4;
+var mapWidth = screenWidth * 2;
+var mapHeight = screenHeight * 2;
 var canvas = null;
 var context = null;
 var mapSize = 40;
@@ -153,8 +153,8 @@ function loadImageArr()// загрузить массив изображений
 window.addEventListener('load', function () {
     preload();
     create();
-    setInterval(drawAll, 60);
-    setInterval(update, 60);
+    setInterval(drawAll, 16);
+    setInterval(update, 16);
 
 });
 window.onresize = function()
@@ -278,8 +278,47 @@ function update()
         }
         else
         {
-            if (camera.x > 0) camera.x -= mouseX - oldMouseX; else camera.x = 1;
-            if (camera.y>0)camera.y -= mouseY - oldMouseY; else camera.y = 1;
+            if (camera.x-(mouseX - oldMouseX) > 0)
+            {
+               camera.x -= mouseX - oldMouseX; 
+            } 
+
+            if (camera.x-(mouseX - oldMouseX) < map.width-camera.width)
+            {
+               camera.x -= mouseX - oldMouseX; 
+            }
+            
+            if (camera.y-(mouseY - oldMouseY)>0  )
+            {
+                camera.y -= mouseY - oldMouseY;
+            } 
+
+            if (camera.y-(mouseY - oldMouseY)<map.height -camera.height )
+            {
+                camera.y -= mouseY - oldMouseY;
+            }
+            if (camera.x < 0) 
+            {
+                camera.x = 1;
+            }
+
+          
+            if (camera.y < 0) 
+            {
+                camera.y = 1;
+            }
+
+           
+            if (camera.x >map.width-camera.width) 
+            {
+                camera.x = map.width-camera.width-1;
+            }
+
+          
+            if (camera.y > map.height -camera.height) 
+            {
+                camera.y = map.height-camera.height-1;
+            }
 
         }
         oldMouseX = mouseX;
