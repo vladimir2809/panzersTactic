@@ -4,8 +4,8 @@ var windowWidth=document.documentElement.clientWidth;
 var windowHeight=document.documentElement.clientHeight;
 var canvasWidth = 800;
 var canvasHeight = 800;
-var mapWidth = screenWidth * 12;
-var mapHeight = screenHeight * 12;
+var mapWidth = screenWidth * 5;
+var mapHeight = screenHeight * 5;
 var canvas = null;
 var context = null;
 var mapSize = 40;
@@ -18,8 +18,12 @@ var imageLoad = false;
 var countLoadImage = 0;
 var panzerArr = [];
 var blockageArr = [];
-let speedMoveCamera = { x: 0, y: 0 };
-let showDownCamera = 0.2;
+var speedMoveCamera = { x: 0, y: 0 };
+var showDownCamera = 0.2;
+var timePressMouseLeft = -1;
+var timePressMouseOld = 0;
+var flagMoveCamera = false;
+var searchRoute=null;
 var map = {
     x:1,
     y:1,
@@ -223,26 +227,31 @@ function create()
     initKeyboardAndMouse();
     updateSize();
     //context.scale(0.1, 0.1);
-    for (let i = 0; i < screenHeight / mapSize;i++)
+    //for (let i = 0; i < screenHeight / mapSize;i++)
+    //{
+    //    var panzer = new Panzer(0, 1, i);
+    //   // panzer.draw(context,camera,1);
+    //    panzerArr.push(panzer);
+    //}
+    for (let i = 0; i < 100;i++)
     {
-        var panzer = new Panzer(0, 1, i);
-       // panzer.draw(context,camera,1);
-        panzerArr.push(panzer);
-    }
-    for (let i = 0; i < screenWidth / mapSize;i++)
-    {
-        var panzer = new Panzer(0, i, 1);
+        let xMap = randomInteger(0,(map.width/mapSize)-1);
+        let yMap = randomInteger(0,(map.height/mapSize)-1);
+        var panzer = new Panzer(0, xMap, yMap);
        // panzer.draw(context,camera,1);
         panzerArr.push(panzer);
     }
     for (let i = 0; i < 1500;i++)
     {
-        let xMap = randomInteger(0,map.width/mapSize);
-        let yMap = randomInteger(0,map.height/mapSize);
+        let xMap = randomInteger(0,(map.width/mapSize)-1);
+        let yMap = randomInteger(0,(map.height/mapSize)-1);
         var blockage = new Blockage(randomInteger(0,1),xMap,yMap)
         // panzer.draw(context,camera,1);
         blockageArr.push(blockage);
     }
+    searchRoute = new SearchRoute();
+    searchRoute.initMap(map.width/mapSize,map.height/mapSize);
+    updateMapSearchRoute();
    // var panzer = new Panzer(1, 2, 2);
    //// panzer.draw(context,camera,1);
    // panzerArr.push(panzer);
@@ -278,6 +287,7 @@ function update()
         {
             
             flagOldMouse = true;
+            timePressMouseOld = new Date().getTime();
         }
         else
         {
@@ -285,20 +295,14 @@ function update()
             if (mouseInCanvas==true)// если мышь в канвасе
             {
                 let dist = calcDist(mouseX, mouseY, oldMouseX, oldMouseY);// считаем растояние пройденые мышью
-                if (dist>15)
-                {
+               
                     // вычесляем множитель для ускорения камеры
-                    let mult = 1;
-                    if (dist > 20) mult = 0.65;
-                    if (dist > 30) mult = 0.45;
+                    let mult = 0.335;
                     // присвоеваем ускорение камере
                     speedMoveCamera.x = (mouseX - oldMouseX) * mult;
-                    speedMoveCamera.y = (mouseY - oldMouseY) * mult;
-                }
-                else    // если игрок держит левую кнопкку мыши и не перемешает курсор
-                {
+                    speedMoveCamera.y = (mouseY - oldMouseY) * mult;                                            
                     moveCamera(mouseX - oldMouseX, mouseY - oldMouseY);
-                }
+                
             }
            
 
@@ -310,28 +314,38 @@ function update()
     else// кнопка мыши отпушена
     {
         flagOldMouse = false;
-        moveCamera(speedMoveCamera.x,speedMoveCamera.y);//перемешаем камеры
-
-        // уменьшаем ускорение камеры
-        if (speedMoveCamera.x>0)
+        let timeNow = new Date().getTime();
+        timePressMouseLeft = timeNow - timePressMouseOld;// вычесляем которые было нажата на левую кнопку мыши
+        if (flagMoveCamera==false && timePressMouseLeft<250)// если игрок сделал жест быстрого скролинга карты
         {
-            speedMoveCamera.x -= showDownCamera;
-            if (speedMoveCamera.x < 0) speedMoveCamera.x = 0;
+            flagMoveCamera = true;
         }
-        if (speedMoveCamera.x<0)
+        if (flagMoveCamera==true)
         {
-            speedMoveCamera.x += showDownCamera;
-            if (speedMoveCamera.x > 0) speedMoveCamera.x = 0;
-        }
-        if (speedMoveCamera.y>0)
-        {
-            speedMoveCamera.y -= showDownCamera;
-            if (speedMoveCamera.y < 0) speedMoveCamera.y = 0;
-        }
-        if (speedMoveCamera.y<0)
-        {
-            speedMoveCamera.y += showDownCamera;
-            if (speedMoveCamera.y > 0) speedMoveCamera.y = 0;
+            moveCamera(speedMoveCamera.x,speedMoveCamera.y);//перемешаем камерy
+        
+            // уменьшаем ускорение камеры
+            if (speedMoveCamera.x>0)
+            {
+                speedMoveCamera.x -= showDownCamera;
+                if (speedMoveCamera.x < 0) speedMoveCamera.x = 0;
+            }
+            if (speedMoveCamera.x<0)
+            {
+                speedMoveCamera.x += showDownCamera;
+                if (speedMoveCamera.x > 0) speedMoveCamera.x = 0;
+            }
+            if (speedMoveCamera.y>0)
+            {
+                speedMoveCamera.y -= showDownCamera;
+                if (speedMoveCamera.y < 0) speedMoveCamera.y = 0;
+            }
+            if (speedMoveCamera.y<0)
+            {
+                speedMoveCamera.y += showDownCamera;
+                if (speedMoveCamera.y > 0) speedMoveCamera.y = 0;
+            }
+            if (speedMoveCamera.x == 0 && speedMoveCamera.y == 0) flagMoveCamera = false;
         }
     }
 }
@@ -378,4 +392,16 @@ function moveCamera(speedX,speedY)
     {
         camera.y = map.height-camera.height-1;
     }
+}
+function updateMapSearchRoute()
+{
+    for (let i = 0; i < blockageArr.length;i++)
+    {
+        searchRoute.changeMapXY(blockageArr[i].xMap, blockageArr[i].yMap, -1);
+    }
+    for (let i = 0; i < panzerArr.length;i++)
+    {
+        searchRoute.changeMapXY(panzerArr[i].xMap, panzerArr[i].yMap, -2);
+    }
+    searchRoute.consoleMap();
 }

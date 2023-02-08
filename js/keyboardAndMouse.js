@@ -56,7 +56,7 @@ function initKeyboardAndMouse(keyArr)// инициализировать пер�
         {
             mouseInCanvas = true;
         }
-        console.log("mX:" + mouseX + " mY:" + mouseY + ' mouseInCanvas:' + (mouseInCanvas == true ? "YES" : "NO"));
+     //   console.log("mX:" + mouseX + " mY:" + mouseY + ' mouseInCanvas:' + (mouseInCanvas == true ? "YES" : "NO"));
     });
     window.addEventListener('mousedown', function () {
         if (event.which==1) mouseLeftPress=true;
