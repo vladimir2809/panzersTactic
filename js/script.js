@@ -251,7 +251,13 @@ function create()
     }
     searchRoute = new SearchRoute();
     searchRoute.initMap(map.width/mapSize,map.height/mapSize);
+    let map2 = searchRoute.cloneMap();
+    //map2[1][1] = 'N';
+    //console.log(map2);
+   
     updateMapSearchRoute();
+    searchRoute.spreadingWave(1,1,50);
+    console.log(searchRoute.mapWave);
    // var panzer = new Panzer(1, 2, 2);
    //// panzer.draw(context,camera,1);
    // panzerArr.push(panzer);
@@ -268,6 +274,7 @@ function drawAll()
     {
         blockageArr[i].draw(context,camera,1);
     }
+    drawWaveRoute(context);
 }
 function drawSprite(context,image,x,y,camera,scale)// функция вывода спрайта на экран
 {
@@ -276,6 +283,38 @@ function drawSprite(context,image,x,y,camera,scale)// функция вывод�
     context.scale(scale,scale);
     context.drawImage(image,x-camera.x,y-camera.y);
     context.restore();
+}
+function drawWaveRoute(context)
+{
+    for (let y = 0; y < searchRoute.heightCell;y++)
+    {
+        for (let x = 0; x < searchRoute.widthCell;x++)
+        {
+            if (searchRoute.mapWave[y][x]>0)
+            {
+          	    context.beginPath();
+	            context.arc(x*mapSize+mapSize/2-camera.x,y*mapSize+mapSize/2-camera.y, mapSize*0.4, 2*Math.PI, false);
+	            context.fillStyle = 'blue';
+	            context.fill();
+	            context.lineWidth = 1;
+	            context.strokeStyle = 'blue';
+	            context.stroke();
+                context.beginPath();
+                context.font = "18px serif";
+                context.fillStyle = 'red';
+                context.fillText(searchRoute.mapWave[y][x]+'', x*mapSize+mapSize/2-camera.x-4 , y*mapSize+mapSize/2-camera.y+6)
+                context.stroke();
+
+            }
+         //   context.beginPath();
+	        //context.arc(150, 75, 50, 0, 2*Math.PI, false);
+	        //context.fillStyle = 'red';
+	        //context.fill();
+	        //context.lineWidth = 1;
+	        //context.strokeStyle = 'red';
+	        //context.stroke();
+        }
+    }
 }
 function update()
 {
