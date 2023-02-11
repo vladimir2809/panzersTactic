@@ -6,6 +6,12 @@ function SearchRoute()
     this.heightCell = null;
     this.xStart = null;
     this.yStart = null;
+    this.xFinish = null;
+    this.yFinish = null;
+    this.finishEnd = false;
+    this.wavePointArr = [];
+    this.point = {x:null,y:null,dist:null};
+    this.routePointArr = [];
     this.initMap = function (widthCell,heightCell)
     {
         this.widthCell = widthCell;
@@ -37,19 +43,24 @@ function SearchRoute()
         }
         return mapBuffer;
     }
-    this.spreadingWave=function(xStart,yStart,distance)// распространение волны для поиска пути
+    this.spreadingWave=function(xStart,yStart,distance,xFinish=null,yFinish=null)// распространение волны для поиска пути
     {
         this.mapWave = this.cloneMap();
         this.xStart = xStart;
         this.yStart = yStart;
+        this.xFinish = xFinish;
+        this.yFinish = yFinish;
+        this.finishEnd = false;
         maxValueWave = 0;
-        for (let k = 0; k < distance;k++)
+        for (let k = 1; k < distance;k++)
         {
-            if (k==0)
+            if (k==1)
             {
-                this.stepWave(xStart, yStart, 0);
+                this.mapWave[yStart][xStart] = 1;
+                this.stepWave(xStart, yStart, 1);
+
             }
-            else if (k>0)
+            else if (k>1)
             {
                 for (let y = 0; y < this.heightCell;y++)
                 {
@@ -58,11 +69,31 @@ function SearchRoute()
                         if (this.mapWave[y][x]==k )
                         {
                             this.stepWave(x,y,k);
+                            if (this.finishEnd == true) break;
                         }
+                       
                     }
+                    if (this.finishEnd == true) break;
+                }
+                if (this.finishEnd == true) break;
+            }
+            if (this.finishEnd == true) break;
+        }
+        for (let y = 0; y < this.heightCell;y++)
+        {
+            for (let x = 0; x < this.widthCell;x++)
+            {
+                if (this.mapWave[y][x]>0)
+                {
+                    let point = clone(this.point);
+                    point.x = x;
+                    point.y = y;
+                    point.dist = this.mapWave[y][x];
+                    this.wavePointArr.push(point);
                 }
             }
         }
+        console.log(this.wavePointArr);
     }
     this.stepWave=function(x,y,value)// функция котороя соседним клеткам присваевает плюс один
     {
@@ -78,9 +109,22 @@ function SearchRoute()
                 (x+addArr[i].x==this.xStart && y+addArr[i].y==this.yStart)==false
                )
             {
+   
                 this.mapWave[y+addArr[i].y][x+addArr[i].x] = value + 1;
+                if (this.xFinish!=null && this.yFinish!=null)
+                {  
+                    if (  (x+addArr[i].x==this.xFinish && y+addArr[i].y==this.yFinish)==true)
+                    {  
+                        this.finishEnd = true;
+                        break;
+                    } 
+              
+                }     
             }
         }
+    }
+    this.buildRoute=function(mapWave,xFinish,yFinish)
+    {
 
     }
     this.checkCellXY=function(x,y)

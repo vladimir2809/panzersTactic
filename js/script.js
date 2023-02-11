@@ -241,7 +241,7 @@ function create()
        // panzer.draw(context,camera,1);
         panzerArr.push(panzer);
     }
-    for (let i = 0; i < 1500;i++)
+    for (let i = 0; i < 150;i++)
     {
         let xMap = randomInteger(0,(map.width/mapSize)-1);
         let yMap = randomInteger(0,(map.height/mapSize)-1);
@@ -256,7 +256,7 @@ function create()
     //console.log(map2);
    
     updateMapSearchRoute();
-    searchRoute.spreadingWave(1,1,50);
+    searchRoute.spreadingWave(1,1,50,103,103);
     console.log(searchRoute.mapWave);
    // var panzer = new Panzer(1, 2, 2);
    //// panzer.draw(context,camera,1);
@@ -286,33 +286,37 @@ function drawSprite(context,image,x,y,camera,scale)// функция вывод�
 }
 function drawWaveRoute(context)
 {
-    for (let y = 0; y < searchRoute.heightCell;y++)
-    {
-        for (let x = 0; x < searchRoute.widthCell;x++)
-        {
-            if (searchRoute.mapWave[y][x]>0)
-            {
-          	    context.beginPath();
-	            context.arc(x*mapSize+mapSize/2-camera.x,y*mapSize+mapSize/2-camera.y, mapSize*0.4, 2*Math.PI, false);
-	            context.fillStyle = 'blue';
-	            context.fill();
-	            context.lineWidth = 1;
-	            context.strokeStyle = 'blue';
-	            context.stroke();
-                context.beginPath();
-                context.font = "18px serif";
-                context.fillStyle = 'red';
-                context.fillText(searchRoute.mapWave[y][x]+'', x*mapSize+mapSize/2-camera.x-4 , y*mapSize+mapSize/2-camera.y+6)
-                context.stroke();
 
+    for (let i = 0; i < searchRoute.wavePointArr.length;i++)
+    {
+        let x = searchRoute.wavePointArr[i].x;
+        let y = searchRoute.wavePointArr[i].y;
+        let dist = searchRoute.wavePointArr[i].dist;
+
+        if (dist>0 || (x==searchRoute.xFinish && y==searchRoute.yFinish))
+        {
+          	context.beginPath();
+            if (x==searchRoute.xFinish && y==searchRoute.yFinish/* && searchRoute.finishEnd==true*/ )
+            {
+                context.fillStyle = 'green';
             }
-         //   context.beginPath();
-	        //context.arc(150, 75, 50, 0, 2*Math.PI, false);
-	        //context.fillStyle = 'red';
-	        //context.fill();
-	        //context.lineWidth = 1;
-	        //context.strokeStyle = 'red';
-	        //context.stroke();
+            else
+            {
+	            context.fillStyle = 'blue';
+            }
+	        context.arc(x*mapSize+mapSize/2-camera.x,y*mapSize+mapSize/2-camera.y, mapSize*0.4, 2*Math.PI, false);
+          
+
+	        context.fill();
+	        context.lineWidth = 1;
+	        context.strokeStyle = 'blue';
+	        context.stroke();
+            context.beginPath();
+            context.font = "18px serif";
+            context.fillStyle = 'red';
+            context.fillText(dist+'', x*mapSize+mapSize/2-camera.x-4 , y*mapSize+mapSize/2-camera.y+6)
+            context.stroke();
+
         }
     }
 }
