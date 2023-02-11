@@ -11,6 +11,7 @@ function SearchRoute()
     this.finishEnd = false;
     this.wavePointArr = [];
     this.point = {x:null,y:null,dist:null};
+    this.maxValueWave = 0;
     this.routePointArr = [];
     this.initMap = function (widthCell,heightCell)
     {
@@ -51,7 +52,7 @@ function SearchRoute()
         this.xFinish = xFinish;
         this.yFinish = yFinish;
         this.finishEnd = false;
-        maxValueWave = 0;
+      
         for (let k = 1; k < distance;k++)
         {
             if (k==1)
@@ -69,6 +70,7 @@ function SearchRoute()
                         if (this.mapWave[y][x]==k )
                         {
                             this.stepWave(x,y,k);
+                            this.maxValueWave = k + 1;
                             if (this.finishEnd == true) break;
                         }
                        
@@ -77,7 +79,7 @@ function SearchRoute()
                 }
                 if (this.finishEnd == true) break;
             }
-            if (this.finishEnd == true) break;
+           // if (this.finishEnd == true) break;
         }
         for (let y = 0; y < this.heightCell;y++)
         {
@@ -125,7 +127,61 @@ function SearchRoute()
     }
     this.buildRoute=function(mapWave,xFinish,yFinish)
     {
+        let addArr = [
+            {x:0,y:-1},
+            {x:1,y:0},
+            {x:0,y:1},
+            {x:-1,y:0},
+        ];
+        for (let i = this.maxValueWave; i > 1; i--)
+        { 
+            let point = clone(this.point);
+            if (i==this.maxValueWave)
+            {
+                point.x = this.xFinish;
+                point.y= this.yFinish;
+                point.dist = this.maxValueWave;
+            }
+            else
+            {
+                for (let j = 0; j < this.wavePointArr.length;j++)
+                {
+                    let flag = false;
+                    for (let k = 0; k < addArr.length;k++)
+                    {
+                        let lenNum = this.routePointArr.length-1;
+                        if (i==this.wavePointArr[j].dist && 
+                            this.routePointArr[lenNum].x+addArr[k].x==this.wavePointArr[j].x &&
+                            this.routePointArr[lenNum].y+addArr[k].y==this.wavePointArr[j].y)
+                        {
+                            point.x = this.wavePointArr[j].x;//+addArr[k].x;
+                            point.y = this.wavePointArr[j].y; //+addArr[k].y;
+                            point.dist = this.wavePointArr[j].dist;
+                            flag = true;
+                          //  break;
+                        }
+                        
+                    }
+                    if (flag == true) break;
+                    
+                    //if (i-1==this.wavePointArr[j].dist)
+                    if (flag==true)
+                    {
 
+                        //point.x = this.wavePointArr[j].x;
+                        //point.y = this.wavePointArr[j].y;
+                        //point.dist = this.wavePointArr[j].dist;
+                    }
+                }
+            }
+            this.routePointArr.push(point);
+        }
+         console.log(this.routePointArr);
+    }
+    this.getRoute=function(xStart,yStart,distance,xFinish=null,yFinish=null)
+    {
+        this.spreadingWave(xStart, yStart, distance, xFinish, yFinish);
+        this.buildRoute(this.mapWave,this.xFinish,this.yFinish);
     }
     this.checkCellXY=function(x,y)
     {  

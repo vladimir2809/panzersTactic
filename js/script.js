@@ -241,7 +241,7 @@ function create()
        // panzer.draw(context,camera,1);
         panzerArr.push(panzer);
     }
-    for (let i = 0; i < 150;i++)
+    for (let i = 0; i < 1500;i++)
     {
         let xMap = randomInteger(0,(map.width/mapSize)-1);
         let yMap = randomInteger(0,(map.height/mapSize)-1);
@@ -256,7 +256,8 @@ function create()
     //console.log(map2);
    
     updateMapSearchRoute();
-    searchRoute.spreadingWave(1,1,50,103,103);
+ //   searchRoute.spreadingWave(1,1,50,10,10);
+    searchRoute.getRoute(1, 1, 100, 10, 50);
     console.log(searchRoute.mapWave);
    // var panzer = new Panzer(1, 2, 2);
    //// panzer.draw(context,camera,1);
@@ -295,18 +296,57 @@ function drawWaveRoute(context)
 
         if (dist>0 || (x==searchRoute.xFinish && y==searchRoute.yFinish))
         {
-          	context.beginPath();
+            let flagRoutePoint = false;
+            for (let j = 0; j < searchRoute.routePointArr.length; j++)
+            {
+                if (x==searchRoute.routePointArr[j].x && y==searchRoute.routePointArr[j].y )
+                {
+                    flagRoutePoint = true;
+                }
+            }
             if (x==searchRoute.xFinish && y==searchRoute.yFinish/* && searchRoute.finishEnd==true*/ )
             {
-                context.fillStyle = 'green';
+                drawPointRoute(context, x, y, dist, 'green');
             }
-            else
+            else if (flagRoutePoint==true)
             {
-	            context.fillStyle = 'blue';
+                 drawPointRoute(context, x, y, dist, 'red');
             }
-	        context.arc(x*mapSize+mapSize/2-camera.x,y*mapSize+mapSize/2-camera.y, mapSize*0.4, 2*Math.PI, false);
+            else 
+            {
+                drawPointRoute(context, x, y, dist, 'blue');
+            }
+
+          //	context.beginPath();
+         //   if (x==searchRoute.xFinish && y==searchRoute.yFinish/* && searchRoute.finishEnd==true*/ )
+         //   {
+         //       context.fillStyle = 'green';
+         //   }
+         //   else
+         //   {
+	        //    context.fillStyle = 'blue';
+         //   }
+	        //context.arc(x*mapSize+mapSize/2-camera.x,y*mapSize+mapSize/2-camera.y, mapSize*0.4, 2*Math.PI, false);
           
 
+	        //context.fill();
+	        //context.lineWidth = 1;
+	        //context.strokeStyle = 'blue';
+	        //context.stroke();
+         //   context.beginPath();
+         //   context.font = "18px serif";
+         //   context.fillStyle = 'red';
+         //   context.fillText(dist+'', x*mapSize+mapSize/2-camera.x-4 , y*mapSize+mapSize/2-camera.y+6)
+         //   context.stroke();
+
+        }
+    }
+}
+function drawPointRoute(context,x,y,dist,color)
+{
+         	context.beginPath();
+            context.fillStyle = color;
+	        context.arc(x*mapSize+mapSize/2-camera.x,y*mapSize+mapSize/2-camera.y, mapSize*0.4, 2*Math.PI, false);
 	        context.fill();
 	        context.lineWidth = 1;
 	        context.strokeStyle = 'blue';
@@ -316,9 +356,6 @@ function drawWaveRoute(context)
             context.fillStyle = 'red';
             context.fillText(dist+'', x*mapSize+mapSize/2-camera.x-4 , y*mapSize+mapSize/2-camera.y+6)
             context.stroke();
-
-        }
-    }
 }
 function update()
 {
