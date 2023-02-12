@@ -129,6 +129,7 @@ function Panzer(command,xMap,yMap)
                     else
                     {
                         this.moving = false;
+                        numSelectPanzer = null;
                         updateMapSearchRoute();
                         break;
                     }
@@ -361,15 +362,24 @@ function drawWaveRoute(context)
             }
             if (x==searchRoute.xFinish && y==searchRoute.yFinish/* && searchRoute.finishEnd==true*/ )
             {
-                drawPointRoute(context, x, y, dist, 'green');
+                if (numSelectPanzer!=null && panzerArr[numSelectPanzer].moving==true) 
+                {
+                    drawPointRoute(context, x, y, dist, 'green');
+                }
             }
             else if (flagRoutePoint==true)
             {
-                 drawPointRoute(context, x, y, dist, 'red');
+                if (numSelectPanzer!=null && panzerArr[numSelectPanzer].moving==true) 
+                {
+                    drawPointRoute(context, x, y, dist, 'red');
+                }
             }
             else 
             {
-                drawPointRoute(context, x, y, dist, 'blue');
+                if (numSelectPanzer!=null && panzerArr[numSelectPanzer].moving==false) 
+                {
+                    drawPointRoute(context, x, y, dist, 'blue');
+                }
             }
 
           //	context.beginPath();
@@ -432,7 +442,7 @@ function update()
                     {
                         let route= searchRoute.getRoute(panzerArr[numPanz].xMap,panzerArr[numPanz].yMap, 30, xPoint,yPoint);
                         panzerArr[numPanz].startMovingByRoute(route);
-                        numSelectPanzer = null;
+                        //numSelectPanzer = null;
                         break;
                     }
                 }
