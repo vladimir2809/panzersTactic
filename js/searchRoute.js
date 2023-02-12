@@ -10,13 +10,17 @@ function SearchRoute()
     this.yFinish = null;
     this.finishEnd = false;
     this.wavePointArr = [];
-    this.point = {x:null,y:null,dist:null};
+    this.point = {xMap:null,yMap:null,dist:null};
     this.maxValueWave = 0;
     this.routePointArr = [];
     this.initMap = function (widthCell,heightCell)
     {
         this.widthCell = widthCell;
         this.heightCell = heightCell;
+        while (this.map.length>0)
+        {
+            this.map.splice(0, 1);
+        }
         for (let i = 0; i < widthCell;i++)
         {
             let arrWidth = [];
@@ -29,9 +33,9 @@ function SearchRoute()
         }
         console.log(this.map);
     }
-    this.changeMapXY=function(x,y,value)
+    this.changeMapXY=function(xMap,yMap,value)
     {
-        this.map[y][x] = value;
+        this.map[yMap][xMap] = value;
     }
     this.cloneMap = function()
     {
@@ -46,13 +50,22 @@ function SearchRoute()
     }
     this.spreadingWave=function(xStart,yStart,distance,xFinish=null,yFinish=null)// распространение волны для поиска пути
     {
-        this.mapWave = this.cloneMap();
+        
         this.xStart = xStart;
         this.yStart = yStart;
         this.xFinish = xFinish;
         this.yFinish = yFinish;
         this.finishEnd = false;
-      
+        this.maxValueWave = 0;
+        this.mapWave = this.cloneMap();
+        while (this.wavePointArr.length>0)
+        {
+            this.wavePointArr.splice(0, 1);
+        }
+        while (this.routePointArr.length>0)
+        {
+            this.routePointArr.splice(0, 1);
+        }
         for (let k = 1; k < distance;k++)
         {
             if (k==1)
@@ -63,13 +76,13 @@ function SearchRoute()
             }
             else if (k>1)
             {
-                for (let y = 0; y < this.heightCell;y++)
+                for (let yMap = 0; yMap < this.heightCell;yMap++)
                 {
-                    for (let x = 0; x < this.widthCell;x++)
+                    for (let xMap = 0; xMap < this.widthCell;xMap++)
                     {
-                        if (this.mapWave[y][x]==k )
+                        if (this.mapWave[yMap][xMap]==k )
                         {
-                            this.stepWave(x,y,k);
+                            this.stepWave(xMap,yMap,k);
                             this.maxValueWave = k + 1;
                             if (this.finishEnd == true) break;
                         }
@@ -81,41 +94,41 @@ function SearchRoute()
             }
            // if (this.finishEnd == true) break;
         }
-        for (let y = 0; y < this.heightCell;y++)
+        for (let yMap = 0; yMap < this.heightCell;yMap++)
         {
-            for (let x = 0; x < this.widthCell;x++)
+            for (let xMap = 0; xMap < this.widthCell;xMap++)
             {
-                if (this.mapWave[y][x]>0)
+                if (this.mapWave[yMap][xMap]>0)
                 {
                     let point = clone(this.point);
-                    point.x = x;
-                    point.y = y;
-                    point.dist = this.mapWave[y][x];
+                    point.xMap = xMap;
+                    point.yMap = yMap;
+                    point.dist = this.mapWave[yMap][xMap];
                     this.wavePointArr.push(point);
                 }
             }
         }
         console.log(this.wavePointArr);
     }
-    this.stepWave=function(x,y,value)// функция котороя соседним клеткам присваевает плюс один
+    this.stepWave=function(xMap,yMap,value)// функция котороя соседним клеткам присваевает плюс один
     {
         let addArr = [
-            {x:0,y:-1},
-            {x:1,y:0},
-            {x:0,y:1},
-            {x:-1,y:0},
+            {xMap:0,yMap:-1},
+            {xMap:1,yMap:0},
+            {xMap:0,yMap:1},
+            {xMap:-1,yMap:0},
         ];
         for (let i = 0; i < addArr.length;i++)
         {
-            if (this.checkCellXY(x+addArr[i].x,y+addArr[i].y)==true &&
-                (x+addArr[i].x==this.xStart && y+addArr[i].y==this.yStart)==false
+            if (this.checkCellXY(xMap+addArr[i].xMap,yMap+addArr[i].yMap)==true &&
+                (xMap+addArr[i].xMap==this.xStart && yMap+addArr[i].yMap==this.yStart)==false
                )
             {
    
-                this.mapWave[y+addArr[i].y][x+addArr[i].x] = value + 1;
+                this.mapWave[yMap+addArr[i].yMap][xMap+addArr[i].xMap] = value + 1;
                 if (this.xFinish!=null && this.yFinish!=null)
                 {  
-                    if (  (x+addArr[i].x==this.xFinish && y+addArr[i].y==this.yFinish)==true)
+                    if (  (xMap+addArr[i].xMap==this.xFinish && yMap+addArr[i].yMap==this.yFinish)==true)
                     {  
                         this.finishEnd = true;
                         break;
@@ -128,18 +141,18 @@ function SearchRoute()
     this.buildRoute=function(mapWave,xFinish,yFinish)
     {
         let addArr = [
-            {x:0,y:-1},
-            {x:1,y:0},
-            {x:0,y:1},
-            {x:-1,y:0},
+            {xMap:0,yMap:-1},
+            {xMap:1,yMap:0},
+            {xMap:0,yMap:1},
+            {xMap:-1,yMap:0},
         ];
-        for (let i = this.maxValueWave; i > 1; i--)
+        for (let i = this.maxValueWave; i >= 1; i--)
         { 
             let point = clone(this.point);
             if (i==this.maxValueWave)
             {
-                point.x = this.xFinish;
-                point.y= this.yFinish;
+                point.xMap = this.xFinish;
+                point.yMap= this.yFinish;
                 point.dist = this.maxValueWave;
             }
             else
@@ -151,11 +164,11 @@ function SearchRoute()
                     {
                         let lenNum = this.routePointArr.length-1;
                         if (i==this.wavePointArr[j].dist && 
-                            this.routePointArr[lenNum].x+addArr[k].x==this.wavePointArr[j].x &&
-                            this.routePointArr[lenNum].y+addArr[k].y==this.wavePointArr[j].y)
+                            this.routePointArr[lenNum].xMap+addArr[k].xMap==this.wavePointArr[j].xMap &&
+                            this.routePointArr[lenNum].yMap+addArr[k].yMap==this.wavePointArr[j].yMap)
                         {
-                            point.x = this.wavePointArr[j].x;//+addArr[k].x;
-                            point.y = this.wavePointArr[j].y; //+addArr[k].y;
+                            point.xMap = this.wavePointArr[j].xMap;//+addArr[k].xMap;
+                            point.yMap = this.wavePointArr[j].yMap; //+addArr[k].yMap;
                             point.dist = this.wavePointArr[j].dist;
                             flag = true;
                           //  break;
@@ -163,47 +176,42 @@ function SearchRoute()
                         
                     }
                     if (flag == true) break;
-                    
-                    //if (i-1==this.wavePointArr[j].dist)
-                    if (flag==true)
-                    {
-
-                        //point.x = this.wavePointArr[j].x;
-                        //point.y = this.wavePointArr[j].y;
-                        //point.dist = this.wavePointArr[j].dist;
-                    }
                 }
             }
             this.routePointArr.push(point);
         }
-         console.log(this.routePointArr);
+         
     }
     this.getRoute=function(xStart,yStart,distance,xFinish=null,yFinish=null)
     {
         this.spreadingWave(xStart, yStart, distance, xFinish, yFinish);
         this.buildRoute(this.mapWave,this.xFinish,this.yFinish);
+        this.routePointArr.reverse();
+        console.log(this.routePointArr);
+        return this.routePointArr;
+      
     }
-    this.checkCellXY=function(x,y)
+    this.checkCellXY=function(xMap,yMap)
     {  
-        if (y<0 || y>this.widthCell || x<0 || x>this.heightCell)
+        if (yMap<0 || yMap>=this.widthCell || xMap<0 || xMap>=this.heightCell)
         {
             return false;
         }
-        else if (this.mapWave[y][x]<0)
+        else if (this.mapWave[yMap][xMap]<0)
         {
             return false;
         }
       
-        else if (this.mapWave[y][x]==0)
+        else if (this.mapWave[yMap][xMap]==0)
         {
             return true;
         }
     }
 
-    this.movingObj=function(oldX,oldY,x,y)
+    this.movingObj=function(oldX,oldY,xMap,yMap)
     {
         let buffer = this.map[oldY][oldX];
-        this.map[y][x] = buffer;
+        this.map[yMap][xMap] = buffer;
         this.map[oldY][oldX] = 0;
     }
     this.consoleMap=function()

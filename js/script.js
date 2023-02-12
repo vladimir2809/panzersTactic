@@ -4,8 +4,8 @@ var windowWidth=document.documentElement.clientWidth;
 var windowHeight=document.documentElement.clientHeight;
 var canvasWidth = 800;
 var canvasHeight = 800;
-var mapWidth = screenWidth * 5;
-var mapHeight = screenHeight * 5;
+var mapWidth = screenWidth * 1;
+var mapHeight = screenHeight * 1;
 var canvas = null;
 var context = null;
 var mapSize = 40;
@@ -24,6 +24,7 @@ var timePressMouseLeft = -1;
 var timePressMouseOld = 0;
 var flagMoveCamera = false;
 var searchRoute=null;
+var numSelectPanzer = null;
 var map = {
     x:1,
     y:1,
@@ -56,6 +57,9 @@ function Panzer(command,xMap,yMap)
     this.mixTowerY = 18.5;
     this.mixTowerPosX = 17;
     this.mixTowerPosY = 17;
+    this.moving = false;
+    this.route = [];
+    this.numPointRoute = null;
     this.updateState=function()// обновить состояние танка, пересчитывается центральная точка
     {
         this.towerX=this.x-this.mixTowerX+this.mixTowerPosX;
@@ -83,6 +87,55 @@ function Panzer(command,xMap,yMap)
         context.rotate(this.angleTower*Math.PI/180);
         context.drawImage(imageArr.get(this.towerNameImage),-this.mixTowerX,-this.mixTowerY);
         context.restore();
+    }
+    this.startMovingByRoute=function (route)
+    {
+        this.moving = true;
+        this.route = JSON.parse(JSON.stringify(route));
+        this.numPointRoute = 1;
+    }
+    this.movingByRoute=function()
+    {
+        if (this.moving==true)
+        {
+            for (let i = 0; i < 10; i++)
+            {
+                let numP = this.numPointRoute;
+                if (this.xMap<this.route[numP].xMap && this.yMap==this.route[numP].yMap)
+                {
+                    this.x++;
+                }
+                if (this.xMap>this.route[numP].xMap && this.yMap==this.route[numP].yMap)
+                {
+                    this.x--;
+                }
+                if (this.xMap==this.route[numP].xMap && this.yMap<this.route[numP].yMap)
+                {
+                    this.y++;
+                }
+                if (this.xMap==this.route[numP].xMap && this.yMap>this.route[numP].yMap)
+                {
+                    this.y--;
+                }
+                if (this.x-(mapSize/2-this.width/2)==this.route[numP].xMap*mapSize &&
+                    this.y-(mapSize/2-this.width/2)==this.route[numP].yMap*mapSize)
+                {    
+                    this.xMap = Math.trunc(this.x / mapSize);
+                    this.yMap = Math.trunc(this.y / mapSize);
+                    if (this.numPointRoute<this.route.length-1)
+                    {
+                        this.numPointRoute++;
+                    }
+                    else
+                    {
+                        this.moving = false;
+                        updateMapSearchRoute();
+                        break;
+                    }
+           
+                }
+            }
+        }
     }
 }
 function Blockage(type,xMap,yMap)// класс препятствие
@@ -226,6 +279,7 @@ function create()
     context = canvas.getContext("2d");
     initKeyboardAndMouse();
     updateSize();
+//    srand(10);
     //context.scale(0.1, 0.1);
     //for (let i = 0; i < screenHeight / mapSize;i++)
     //{
@@ -233,7 +287,7 @@ function create()
     //   // panzer.draw(context,camera,1);
     //    panzerArr.push(panzer);
     //}
-    for (let i = 0; i < 100;i++)
+    for (let i = 0; i < 10;i++)
     {
         let xMap = randomInteger(0,(map.width/mapSize)-1);
         let yMap = randomInteger(0,(map.height/mapSize)-1);
@@ -241,7 +295,7 @@ function create()
        // panzer.draw(context,camera,1);
         panzerArr.push(panzer);
     }
-    for (let i = 0; i < 1500;i++)
+    for (let i = 0; i < 100;i++)
     {
         let xMap = randomInteger(0,(map.width/mapSize)-1);
         let yMap = randomInteger(0,(map.height/mapSize)-1);
@@ -257,7 +311,7 @@ function create()
    
     updateMapSearchRoute();
  //   searchRoute.spreadingWave(1,1,50,10,10);
-    searchRoute.getRoute(1, 1, 100, 10, 50);
+  ///  searchRoute.getRoute(panzerArr[0].xMap,panzerArr[0].yMap, 10, 10,10);
     console.log(searchRoute.mapWave);
    // var panzer = new Panzer(1, 2, 2);
    //// panzer.draw(context,camera,1);
@@ -267,6 +321,7 @@ function drawAll()
 {
     context.fillStyle='rgb(210,210,210)';
     context.fillRect(0,0,camera.width,camera.height);// очистка экрана
+    drawWaveRoute(context);
     for (let i = 0; i < panzerArr.length;i++)
     {
         panzerArr[i].draw(context,camera,1);
@@ -275,7 +330,7 @@ function drawAll()
     {
         blockageArr[i].draw(context,camera,1);
     }
-    drawWaveRoute(context);
+  
 }
 function drawSprite(context,image,x,y,camera,scale)// функция вывода спрайта на экран
 {
@@ -290,8 +345,8 @@ function drawWaveRoute(context)
 
     for (let i = 0; i < searchRoute.wavePointArr.length;i++)
     {
-        let x = searchRoute.wavePointArr[i].x;
-        let y = searchRoute.wavePointArr[i].y;
+        let x = searchRoute.wavePointArr[i].xMap;
+        let y = searchRoute.wavePointArr[i].yMap;
         let dist = searchRoute.wavePointArr[i].dist;
 
         if (dist>0 || (x==searchRoute.xFinish && y==searchRoute.yFinish))
@@ -299,7 +354,7 @@ function drawWaveRoute(context)
             let flagRoutePoint = false;
             for (let j = 0; j < searchRoute.routePointArr.length; j++)
             {
-                if (x==searchRoute.routePointArr[j].x && y==searchRoute.routePointArr[j].y )
+                if (x==searchRoute.routePointArr[j].xMap && y==searchRoute.routePointArr[j].yMap )
                 {
                     flagRoutePoint = true;
                 }
@@ -362,7 +417,42 @@ function update()
     showDownCamera = 0.5;
     if (mouseLeftPress==true)// если нажата левая кнопка мыши
     {
-      
+        if (numSelectPanzer!=null)
+        {
+            for (let i = 0; i < searchRoute.wavePointArr.length;i++)
+            {
+                xPoint = searchRoute.wavePointArr[i].xMap;
+                yPoint = searchRoute.wavePointArr[i].yMap;
+                numPanz = numSelectPanzer;
+                if ((mouseX>panzerArr[numPanz].xMap*mapSize && mouseX<panzerArr[numPanz].xMap*mapSize+mapSize &&
+                    mouseY>panzerArr[numPanz].yMap*mapSize && mouseY<panzerArr[numPanz].yMap*mapSize+mapSize)==false)
+                {
+                    if (mouseX>xPoint*mapSize && mouseX<xPoint*mapSize+mapSize &&
+                        mouseY>yPoint*mapSize && mouseY<yPoint*mapSize+mapSize)
+                    {
+                        let route= searchRoute.getRoute(panzerArr[numPanz].xMap,panzerArr[numPanz].yMap, 30, xPoint,yPoint);
+                        panzerArr[numPanz].startMovingByRoute(route);
+                        numSelectPanzer = null;
+                        break;
+                    }
+                }
+            }
+        }
+        for (let i = 0; i < panzerArr.length;i++)
+        {
+            if (checkInObj(panzerArr[i],mouseX,mouseY)==true)
+            {
+                searchRoute.spreadingWave(panzerArr[i].xMap,panzerArr[i].yMap, 30);
+                numSelectPanzer = i;
+             //   let route= searchRoute.getRoute(panzerArr[i].xMap,panzerArr[i].yMap, 100, 10,10);
+               // panzerArr[i].startMovingByRoute(route);
+                //console.log('Route Panzer');
+                //console.log(route);
+
+
+            }
+        }
+   
         if (flagOldMouse==false)// 
         {
             
@@ -428,6 +518,10 @@ function update()
             if (speedMoveCamera.x == 0 && speedMoveCamera.y == 0) flagMoveCamera = false;
         }
     }
+    for (let i = 0; i < panzerArr.length;i++)
+    {
+        panzerArr[i].movingByRoute();
+    }
 }
 function moveCamera(speedX,speedY)
 {
@@ -473,8 +567,10 @@ function moveCamera(speedX,speedY)
         camera.y = map.height-camera.height-1;
     }
 }
+
 function updateMapSearchRoute()
 {
+    searchRoute.initMap(mapWidth/mapSize,mapHeight/mapSize);
     for (let i = 0; i < blockageArr.length;i++)
     {
         searchRoute.changeMapXY(blockageArr[i].xMap, blockageArr[i].yMap, -1);
