@@ -72,9 +72,10 @@ function SearchRoute()
             {
                 this.mapWave[yStart][xStart] = 1;
                 this.stepWave(xStart, yStart, 1);
+                this.maxValueWave =  2;
 
             }
-            else if (k>1)
+            else if (k>1 && this.finishEnd==false)
             {
                 for (let yMap = 0; yMap < this.heightCell;yMap++)
                 {
@@ -146,6 +147,7 @@ function SearchRoute()
             {xMap:0,yMap:1},
             {xMap:-1,yMap:0},
         ];
+        console.log("this.maxValueWave " +this.maxValueWave)
         for (let i = this.maxValueWave; i >= 1; i--)
         { 
             let point = clone(this.point);
@@ -180,6 +182,7 @@ function SearchRoute()
             }
             this.routePointArr.push(point);
         }
+         console.log(this.routePointArr);
          
     }
     this.getRoute=function(xStart,yStart,distance,xFinish=null,yFinish=null)
@@ -187,7 +190,7 @@ function SearchRoute()
         this.spreadingWave(xStart, yStart, distance, xFinish, yFinish);
         this.buildRoute(this.mapWave,this.xFinish,this.yFinish);
         this.routePointArr.reverse();
-        console.log(this.routePointArr);
+  //      console.log(this.routePointArr);
         return this.routePointArr;
       
     }

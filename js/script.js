@@ -98,7 +98,7 @@ function Panzer(command,xMap,yMap)
     {
         if (this.moving==true)
         {
-            for (let i = 0; i < 10; i++)
+            for (let i = 0; i < 5; i++)
             {
                 let numP = this.numPointRoute;
                 if (this.xMap<this.route[numP].xMap && this.yMap==this.route[numP].yMap)
