@@ -108,7 +108,7 @@ function movingToAngle(angle,  angle1, speedRotation=1)// функция пла�
 	if (angle > 180) angle -= 360;
 	if (angle < -180) angle += 360;
 	//double speedRotation = 1;
-        mult=0.1;
+        mult=0.25;
         if (Math.abs(angle1 - angle) >= 40) speedRotation *= mult;
         else if (Math.abs(angle1 - angle) >= 20) speedRotation *= mult/2;
         else if (Math.abs(angle1 - angle) >= 10) speedRotation *= mult/4;

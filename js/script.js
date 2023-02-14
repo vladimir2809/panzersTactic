@@ -24,6 +24,7 @@ var timePressMouseLeft = -1;
 var timePressMouseOld = 0;
 var flagMoveCamera = false;
 var searchRoute=null;
+var bullets = null;
 var numSelectPanzer = null;
 var map = {
     x:1,
@@ -58,13 +59,18 @@ function Panzer(command,xMap,yMap)
     this.mixTowerPosX = 17;
     this.mixTowerPosY = 17;
     this.moving = false;
+    this.endMove == true;
+    this.oldEndMove = this.endMove;
+    this.attack = false;
+    this.tookAim = false;
+    this.angleAim = null;
     this.route = [];
     this.numPointRoute = null;
     this.updateState=function()// обновить состояние танка, пересчитывается центральная точка
     {
         this.towerX=this.x-this.mixTowerX+this.mixTowerPosX;
         this.towerY=this.y-this.mixTowerY+this.mixTowerPosY;
-        this.angleTower++;
+  //      this.angleTower++;
     },
     this.draw = function(context,camera,scale=1)
     {
@@ -91,6 +97,7 @@ function Panzer(command,xMap,yMap)
     this.startMovingByRoute=function (route)
     {
         this.moving = true;
+        this.endMove = this.oldEndMove=false;
         this.route = JSON.parse(JSON.stringify(route));
         this.numPointRoute = 1;
     }
@@ -98,24 +105,33 @@ function Panzer(command,xMap,yMap)
     {
         if (this.moving==true)
         {
-            for (let i = 0; i < 5; i++)
+            
+            for (let i = 0; i < 2; i++)
             {
                 let numP = this.numPointRoute;
                 if (this.xMap<this.route[numP].xMap && this.yMap==this.route[numP].yMap)
                 {
                     this.x++;
+                    this.angleBody = 90;
+                    this.angleTower = 90;
                 }
                 if (this.xMap>this.route[numP].xMap && this.yMap==this.route[numP].yMap)
                 {
                     this.x--;
+                    this.angleBody = 270;
+                    this.angleTower = 270;
                 }
                 if (this.xMap==this.route[numP].xMap && this.yMap<this.route[numP].yMap)
                 {
                     this.y++;
+                    this.angleBody = 180;
+                    this.angleTower = 180;
                 }
                 if (this.xMap==this.route[numP].xMap && this.yMap>this.route[numP].yMap)
                 {
                     this.y--;
+                    this.angleBody = 0;
+                    this.angleTower = 0;
                 }
                 if (this.x-(mapSize/2-this.width/2)==this.route[numP].xMap*mapSize &&
                     this.y-(mapSize/2-this.width/2)==this.route[numP].yMap*mapSize)
@@ -129,13 +145,21 @@ function Panzer(command,xMap,yMap)
                     else
                     {
                         this.moving = false;
-                        numSelectPanzer = null;
-                        updateMapSearchRoute();
+                        this.endMove = true;
+                      
                         break;
                     }
            
                 }
             }
+        }
+    }
+    this.endMoveToRoute = function (callback)
+    {
+        if (this.endMove==true && this.oldEndMove==false)
+        {
+            this.oldEndMove = true;
+            callback();
         }
     }
 }
@@ -280,7 +304,7 @@ function create()
     context = canvas.getContext("2d");
     initKeyboardAndMouse();
     updateSize();
-//    srand(10);
+    srand(182);
     //context.scale(0.1, 0.1);
     //for (let i = 0; i < screenHeight / mapSize;i++)
     //{
@@ -292,20 +316,22 @@ function create()
     {
         let xMap = randomInteger(0,(map.width/mapSize)-1);
         let yMap = randomInteger(0,(map.height/mapSize)-1);
-        var panzer = new Panzer(0, xMap, yMap);
+        var panzer = new Panzer(i % 2, xMap, yMap);
        // panzer.draw(context,camera,1);
         panzerArr.push(panzer);
     }
+    console.log(panzerArr);
     for (let i = 0; i < 100;i++)
     {
         let xMap = randomInteger(0,(map.width/mapSize)-1);
         let yMap = randomInteger(0,(map.height/mapSize)-1);
         var blockage = new Blockage(randomInteger(0,1),xMap,yMap)
         // panzer.draw(context,camera,1);
-        blockageArr.push(blockage);
+       blockageArr.push(blockage);
     }
     searchRoute = new SearchRoute();
     searchRoute.initMap(map.width/mapSize,map.height/mapSize);
+    bullets = new Bullets();
     let map2 = searchRoute.cloneMap();
     //map2[1][1] = 'N';
     //console.log(map2);
@@ -331,6 +357,7 @@ function drawAll()
     {
         blockageArr[i].draw(context,camera,1);
     }
+    bullets.drawBullets(context);
   
 }
 function drawSprite(context,image,x,y,camera,scale)// функция вывода спрайта на экран
@@ -450,9 +477,21 @@ function update()
         }
         for (let i = 0; i < panzerArr.length;i++)
         {
-            if (checkInObj(panzerArr[i],mouseX,mouseY)==true)
+            if (numSelectPanzer!=null)
             {
-                searchRoute.spreadingWave(panzerArr[i].xMap,panzerArr[i].yMap, 30);
+                numPanz = numSelectPanzer;
+                if (checkInObj(panzerArr[i],mouseX,mouseY)==true && panzerArr[i].command==1 &&
+                    i!=numSelectPanzer)
+                {
+                    panzerArr[numPanz].attack = true;
+                    panzerArr[numPanz].angleAim = angleIm(panzerArr[numPanz].x, panzerArr[numPanz].y, panzerArr[i].x, panzerArr[i].y);
+
+                }
+ 
+            }
+            if (checkInObj(panzerArr[i],mouseX,mouseY)==true && panzerArr[i].command==0)
+            {
+                searchRoute.spreadingWave(panzerArr[i].xMap,panzerArr[i].yMap, 10);
                 numSelectPanzer = i;
              //   let route= searchRoute.getRoute(panzerArr[i].xMap,panzerArr[i].yMap, 100, 10,10);
                // panzerArr[i].startMovingByRoute(route);
@@ -531,7 +570,35 @@ function update()
     for (let i = 0; i < panzerArr.length;i++)
     {
         panzerArr[i].movingByRoute();
+        if (numSelectPanzer!=null)
+        {
+            panzerArr[i].endMoveToRoute(function () {
+                //alert('panzer end Move');
+                numSelectPanzer = null;
+                updateMapSearchRoute();
+            });
+        }
     }
+    if (numSelectPanzer!=null)
+    {
+        let numPanz = numSelectPanzer;
+        if (  panzerArr[numPanz].attack==true)
+        {
+            let angleAim = panzerArr[numPanz].angleAim;
+            panzerArr[numPanz].angleTower = movingToAngle(panzerArr[numPanz].angleTower,angleAim,10);
+            if (Math.abs(panzerArr[numPanz].angleTower-angleAim)<2)
+            {
+                panzerArr[numPanz].tookAim = true;
+            }
+            if (panzerArr[numPanz].tookAim==true)
+            {
+                bullets.shot(panzerArr[numPanz].x, panzerArr[numPanz].y,panzerArr[numPanz].angleTower );
+                panzerArr[numPanz].attack = false;
+                panzerArr[numPanz].tookAim = false;
+            }
+}
+    }
+    bullets.update();
 }
 function moveCamera(speedX,speedY)
 {
