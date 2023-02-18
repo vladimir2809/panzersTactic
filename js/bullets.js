@@ -23,6 +23,13 @@ Bullets = function () {
             }
         }
     }
+    this.kill =function(num)
+    {
+        if (this.bulletArr[num].being==true)
+        {
+            this.bulletArr[num].being = false;
+        }
+    }
     this.shot=function(x,y,angle)
     {
         let bullet = clone(this.bullet);
