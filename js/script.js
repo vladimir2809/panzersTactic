@@ -26,7 +26,7 @@ var flagMoveCamera = false;
 var searchRoute=null;// поиск пути
 var bullets = null;
 var numSelectPanzer = null;// номер выбраного танка
-var line = { x:null, y:null, x1:null, y1:null };// линия для вычесления пересечений
+var line = { x:null, y:null, x1:null, y1:null, numP:null };// линия для вычесления пересечений
 var map = {
     x:1,
     y:1,
@@ -185,8 +185,8 @@ function Blockage(type,xMap,yMap)// класс препятствие
     this.nameImage = null;
     switch (this.type)
     {
-        case 'wall': this.nameImage = 'wall'; break;
-        case 'water':   this.nameImage = 'water'; break;
+        //case 'wall': this.nameImage = 'wall'; break;
+        //case 'water':   this.nameImage = 'water'; break;
         case 0:   this.nameImage = 'wall'; break;
         case 1:   this.nameImage = 'water'; break;
     }
@@ -197,7 +197,7 @@ function Blockage(type,xMap,yMap)// класс препятствие
         drawSprite(context,imageArr.get(this.nameImage),this.x,this.y,camera,scale)
     }
 }
-function calcLineArr(obj)// расчитать массив линий для обьекта
+function calcLineArr(obj,type="blockage",numP=null)// расчитать массив линий для обьекта
 {
    let lineArr=[];
    for (let j=0;j<4;j++)
@@ -228,6 +228,10 @@ function calcLineArr(obj)// расчитать массив линий для о
             x1:obj.x,
             y1:obj.y,
         }
+       if (type!='blockage') 
+       {
+           lineArr[j].numP = numP;
+       }
         ////console.log(wallArr[i].lineArr[j].x);      
     }
     return lineArr;
@@ -353,7 +357,7 @@ function create()
     context = canvas.getContext("2d");
     initKeyboardAndMouse();
     updateSize();
-    srand(182);
+    srand(180);
     //context.scale(0.1, 0.1);
     //for (let i = 0; i < screenHeight / mapSize;i++)
     //{
@@ -363,19 +367,29 @@ function create()
     //}
     for (let i = 0; i < 10;i++)// создать танки
     {
-        let xMap = randomInteger(0,(map.width/mapSize)-1);
-        let yMap = randomInteger(0,(map.height/mapSize)-1);
+        let xMap = null;
+        let yMap = null;
+        do {
+            xMap = randomInteger(0, (map.width / mapSize) - 1);
+            yMap = randomInteger(0, (map.height / mapSize) - 1);
+        } while (checkObjInCell(xMap, yMap) == true);
         var panzer = new Panzer(i % 2, xMap, yMap);
         panzer.being = true;
-        panzer.lineArr=calcLineArr(panzer);
+        panzer.lineArr=calcLineArr(panzer,'panzer',i);
        // panzer.draw(context,camera,1);
         panzerArr.push(panzer);
     }
     console.log(panzerArr);
     for (let i = 0; i < 100;i++)// создать препятствия
     {
-        let xMap = randomInteger(0,(map.width/mapSize)-1);
-        let yMap = randomInteger(0,(map.height/mapSize)-1);
+        //let xMap = randomInteger(0,(map.width/mapSize)-1);
+        //let yMap = randomInteger(0,(map.height/mapSize)-1);
+        let xMap = null;
+        let yMap = null;
+        do {
+            xMap = randomInteger(0, (map.width / mapSize) - 1);
+            yMap = randomInteger(0, (map.height / mapSize) - 1);
+        } while (checkObjInCell(xMap, yMap) == true);
         var blockage = new Blockage(randomInteger(0,1),xMap,yMap)
         // panzer.draw(context,camera,1);
         blockage.lineArr=calcLineArr(blockage);
@@ -418,6 +432,16 @@ function drawAll()// нарисовать все
     {
         drawLineArr(panzerArr[i],"red")
     }
+    let colorLine = "red";
+    if (crossingTwoPoint(panzerArr[0].centrX,panzerArr[0].centrY,panzerArr[1].centrX,panzerArr[1].centrY)==true)
+    {
+        colorLine = "blue";
+    }
+    context.beginPath();
+    context.strokeStyle=colorLine;
+    context.moveTo(panzerArr[0].centrX,panzerArr[0].centrY); //передвигаем перо
+    context.lineTo(panzerArr[1].centrX,panzerArr[1].centrY); //рисуем линию
+    context.stroke();
 }
 function drawLineArr(obj,color="#00FF00")// функция рисований линий, для расчета пересечений у конкретного обьекта
 {
@@ -557,8 +581,17 @@ function update()// основной цикл игры
                 if (numSelectPanzer!=null)
                 {
                     numPanz = numSelectPanzer;
+                    //let flag = false;
+                    //for (let j = 0; j < panzerArr.length;j++) 
+                    //{
+                    //    if (checkInObj(panzerArr[j],mouseX,mouseY) && i==j)// если мышь в танке для атаки
+                    //    {
+                    //        flag = true;
+                    //    }
+                    //}
                     if (checkInObj(panzerArr[i],mouseX,mouseY)==true && panzerArr[i].command==1 &&
-                        i!=numSelectPanzer)
+                        i!=numSelectPanzer && panzerArr[numPanz].attack == false /*&& flag==true*/ &&
+                        panzerArr[numPanz].attackThrow==false)
                     {
                         panzerArr[numPanz].attack = true;
                         panzerArr[numPanz].angleAim = angleIm(panzerArr[numPanz].centrX, panzerArr[numPanz].centrY, 
@@ -659,7 +692,7 @@ function update()// основной цикл игры
             panzerArr[i].endMoveToRoute(function () {
                 //alert('panzer end Move');
                 numSelectPanzer = null;
-                panzerArr[i].lineArr=calcLineArr(panzerArr[i]);
+                panzerArr[i].lineArr=calcLineArr(panzerArr[i],'panzer',i);
                 updateMapSearchRoute();
             });
         }
@@ -762,7 +795,25 @@ function collisioinBulets()// столкновение пуль с обьект�
 
     }
 }
+function checkObjInCell(xCell,yCell)
+{
+    for (let i = 0; i < blockageArr.length;i++)
+    {
+        if (xCell==blockageArr[i].xMap && yCell==blockageArr[i].yMap)
+        {
+            return true;
+        }
+    }
+    for (let i = 0; i < panzerArr.length;i++)
+    {
+        if (xCell==panzerArr[i].xMap && yCell==panzerArr[i].yMap)
+        {
+            return true;
+        }
+    }
+    return false;
 
+}
 function updateMapSearchRoute()
 {
     searchRoute.initMap(mapWidth/mapSize,mapHeight/mapSize);
@@ -776,6 +827,46 @@ function updateMapSearchRoute()
         searchRoute.changeMapXY(panzerArr[i].xMap, panzerArr[i].yMap, -2);
     }
     searchRoute.consoleMap();
+}
+function crossingTwoPoint(x1,y1,x2,y2)// проверяет могут ли 2 точки соединиться по прямой без препятсвий стен
+{
+    for (let i = 0; i < blockageArr.length;i++)
+    {
+        if (blockageArr[i].type==0)
+        {
+          //alert(55);
+            for (let j = 0; j < blockageArr[i].lineArr.length;j++)
+            {
+            
+                let line = blockageArr[i].lineArr[j];
+                if (IsCrossing(x1, y1, x2, y2,line.x,line.y,line.x1,line.y1)==true)
+                {
+                    return false;
+                }
+            }
+
+        }
+    }
+    //for (let i = 0; i < panzerArr.length;i++)
+    //{
+    //    for (let j = 0; j < panzerArr[i].lineArr.length;j++)
+    //    {
+            
+    //        let line = panzerArr[i].lineArr[j];
+    //        if (line.numP!=i)
+    //        {
+    //            if (IsCrossing(x1, y1, x2, y2,line.x,line.y,line.x1,line.y1)==true)
+    //            {
+    //                return false;
+    //            }
+    //        }
+    //    }
+    //}
+    return true;
+}
+function visiblePanzerToPanzer(panzer1,panzer2)// проверяет может ли танк увидеть другой танк.
+{
+
 }
 function   IsCrossing( x1,  y1,  x2,  y2,  x3,  y3,  x4,  y4)// функция расчета пересечния двух прямых
 {
