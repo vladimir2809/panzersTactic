@@ -118,7 +118,12 @@ function movingToAngle(angle,  angle1, speedRotation=1)// функция пла�
         
         //angle=-90;
        // console.log ("A0: "+angle+" A1 "+Math.trunc(angle1));
-	if (angle <= angle1 + speedRotation && angle >= angle1 - speedRotation) { vector = 0; return angle; };
+	if (angle <= angle1 + speedRotation && angle >= angle1 - speedRotation) 
+    {
+        vector = 0; 
+        return angle; 
+      //  console.log('speedRotation='+speedRotation);
+    }
 	if (vector == 1) return angle + speedRotation;
 	// unit[n].f++;
 	if (vector == 2) return angle - speedRotation;

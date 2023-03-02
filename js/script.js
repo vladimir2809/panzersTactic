@@ -68,6 +68,7 @@ function Panzer(command,xMap,yMap)
     this.attack = false;// танк атакуетр
     this.tookAim = false;// танк прицелился
     this.angleAim = null;// угол башни
+    this.imUnderGun = false; // я под прицелом
     this.route = [];// массив маршрута
     this.numPointRoute = null;// номер точки в маршруте
     this.lineArr = [];
@@ -358,7 +359,7 @@ function create()
     context = canvas.getContext("2d");
     initKeyboardAndMouse();
     updateSize();
-    srand(180);
+    srand(1);
     //context.scale(0.1, 0.1);
     //for (let i = 0; i < screenHeight / mapSize;i++)
     //{
@@ -446,7 +447,8 @@ function drawAll()// нарисовать все
     {
         for (let j = 0; j < panzerArr.length;j++)
         {
-            if (i!=j && panzerArr[i].command!=panzerArr[j].command)
+            if (i!=j && panzerArr[i].command!=panzerArr[j].command &&
+                panzerArr[i].being==true && panzerArr[j].being==true)
             {
                 if (visiblePanzerToPanzer(i,j)==true)
                 {
@@ -459,18 +461,15 @@ function drawAll()// нарисовать все
             }
         }
     }
-    if (numSelectPanzer!=null)
+    if (numSelectPanzer!=null &&panzerArr[numSelectPanzer].moving==false)
     {
-        numPanz = numSelectPanzer;
         for (let i = 0; i < panzerArr.length;i++)
         {
-            if (panzerArr[i].command==1)
+            if (panzerArr[i].imUnderGun==true)
             {
-                if (visiblePanzerToPanzer(numPanz,i)==true)
-                {
-                      drawSprite(context,imageArr.get('AIM'),panzerArr[i].x,panzerArr[i].y,camera,1)
-                }
+                drawSprite(context,imageArr.get('AIM'),panzerArr[i].x,panzerArr[i].y,camera,1)
             }
+         
         }
            
     }
@@ -531,7 +530,11 @@ function drawWaveRoute(context)// нарисовать волну для пои�
             }
             else 
             {
-                if (numSelectPanzer!=null && panzerArr[numSelectPanzer].moving==false) 
+                if (numSelectPanzer!=null && panzerArr[numSelectPanzer].moving==false &&
+                    panzerArr[numSelectPanzer].attack==false &&
+                    panzerArr[numSelectPanzer].attackThrow==false &&
+                    panzerArr[numSelectPanzer].xMap!=searchRoute.xFinish && 
+                    panzerArr[numSelectPanzer].yMap!=searchRoute.yFinish) 
                 {
                     drawPointRoute(context, x, y, dist, 'blue');
                 }
@@ -571,6 +574,7 @@ function drawPointRoute(context,x,y,dist,color)// нарисовать точк�
 	        context.lineWidth = 1;
 	        context.strokeStyle = 'blue';
 	        context.stroke();
+
             context.beginPath();
             context.font = "18px serif";
             context.fillStyle = 'red';
@@ -638,6 +642,7 @@ function update()// основной цикл игры
                     updateMapSearchRoute();
                     searchRoute.spreadingWave(panzerArr[i].xMap,panzerArr[i].yMap, 10);
                     numSelectPanzer = i;
+                    updateImUnderGunPanzer();
                     panzerArr[i].attackThrow = false;
                  //   let route= searchRoute.getRoute(panzerArr[i].xMap,panzerArr[i].yMap, 100, 10,10);
                    // panzerArr[i].startMovingByRoute(route);
@@ -725,6 +730,7 @@ function update()// основной цикл игры
                 //alert('panzer end Move');
               //  numSelectPanzer = null;
                 panzerArr[i].lineArr=calcLineArr(panzerArr[i],'panzer',i);
+                updateImUnderGunPanzer();
                 updateMapSearchRoute();
             });
         }
@@ -737,7 +743,7 @@ function update()// основной цикл игры
         {
             let angleAim = panzerArr[numPanz].angleAim;
             panzerArr[numPanz].angleTower = movingToAngle(panzerArr[numPanz].angleTower,angleAim,10);
-            if (Math.abs(panzerArr[numPanz].angleTower-angleAim)<2)
+            if (Math.abs(panzerArr[numPanz].angleTower-angleAim)<0.5)
             {
                 panzerArr[numPanz].tookAim = true;
             }
@@ -747,9 +753,31 @@ function update()// основной цикл игры
                 panzerArr[numPanz].attack = false;
                 panzerArr[numPanz].attackThrow = true;
                 panzerArr[numPanz].tookAim = false;
+                console.log('angleTower='+panzerArr[numPanz].angleTower);
+                console.log('angleAIM='+panzerArr[numPanz].angleAim);
             }
 }
     }
+    //if (numSelectPanzer!=null)
+    //{
+    //    numPanz = numSelectPanzer;
+    //    for (let i = 0; i < panzerArr.length;i++)
+    //    {
+    //        panzerArr[i].imUnderGun=false;
+    //    }
+    //    for (let i = 0; i < panzerArr.length;i++)
+    //    {
+    //        if (panzerArr[i].command==1 && panzerArr[i].being==true)
+    //        {
+    //            if (visiblePanzerToPanzer(numPanz,i)==true)
+    //            {
+    //                panzerArr[i].imUnderGun=true;
+    //                 // drawSprite(context,imageArr.get('AIM'),panzerArr[i].x,panzerArr[i].y,camera,1)
+    //            }
+    //        }
+    //    }
+           
+    //}
     bullets.update();
     collisioinBulets();
 }
@@ -797,6 +825,29 @@ function moveCamera(speedX,speedY)// движение камеры от зада
         camera.y = map.height-camera.height-1;
     }
 }
+function updateImUnderGunPanzer()
+{
+    if (numSelectPanzer!=null)
+    {
+        numPanz = numSelectPanzer;
+        for (let i = 0; i < panzerArr.length;i++)
+        {
+            panzerArr[i].imUnderGun=false;
+        }
+        for (let i = 0; i < panzerArr.length;i++)
+        {
+            if (panzerArr[i].command==1 && panzerArr[i].being==true)
+            {
+                if (visiblePanzerToPanzer(numPanz,i)==true)
+                {
+                    panzerArr[i].imUnderGun=true;
+                        // drawSprite(context,imageArr.get('AIM'),panzerArr[i].x,panzerArr[i].y,camera,1)
+                }
+            }
+        }
+           
+    }
+}
 function collisioinBulets()// столкновение пуль с обьектами игры
 {      
     for (let i = 0; i < bullets.bulletArr.length;i++)
@@ -819,6 +870,7 @@ function collisioinBulets()// столкновение пуль с обьект�
                 {
                     bullets.kill(i);
                     panzerArr[j].being = false;
+                    updateImUnderGunPanzer();
                 //    alert(589);
           
                 }
