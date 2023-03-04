@@ -26,6 +26,7 @@ var flagMoveCamera = false;
 var searchRoute=null;// поиск пути
 var bullets = null;
 var numSelectPanzer = null;// номер выбраного танка
+var numCommandStep = 0;
 var line = { x:null, y:null, x1:null, y1:null, numP:null };// линия для вычесления пересечений
 var map = {
     x:1,
@@ -357,7 +358,7 @@ function create()
 {
     canvas = document.getElementById("canvas");
     context = canvas.getContext("2d");
-    initKeyboardAndMouse();
+    initKeyboardAndMouse(["Digit1", "Digit2", "KeyW",'KeyA',"Delete",'KeyD']);
     updateSize();
     srand(1);
     //context.scale(0.1, 0.1);
@@ -430,10 +431,10 @@ function drawAll()// нарисовать все
     {
         drawLineArr(blockageArr[i])
     }
-    //for (let i = 0; i < panzerArr.length; i++)
-    //{
-    //    drawLineArr(panzerArr[i],"red")
-    //}
+    for (let i = 0; i < panzerArr.length; i++)
+    {
+        drawLineArr(panzerArr[i],"red")
+    }
     let colorLine = "red";
     //if (crossingTwoPoint(panzerArr[0].centrX,panzerArr[0].centrY,panzerArr[1].centrX,panzerArr[1].centrY)==false)
     //{
@@ -780,6 +781,7 @@ function update()// основной цикл игры
     //}
     bullets.update();
     collisioinBulets();
+    redactGameMap();
 }
 function moveCamera(speedX,speedY)// движение камеры от заданной скорости
 {
@@ -879,7 +881,7 @@ function collisioinBulets()// столкновение пуль с обьект�
 
     }
 }
-function checkObjInCell(xCell,yCell)
+function checkObjInCell(xCell,yCell)// есть ли обьект в этой клетке
 {
     for (let i = 0; i < blockageArr.length;i++)
     {
@@ -898,7 +900,7 @@ function checkObjInCell(xCell,yCell)
     return false;
 
 }
-function updateMapSearchRoute()
+function updateMapSearchRoute()// обновить карту для поиска пути
 {
     searchRoute.initMap(mapWidth/mapSize,mapHeight/mapSize);
     for (let i = 0; i < blockageArr.length;i++)
@@ -911,6 +913,94 @@ function updateMapSearchRoute()
         searchRoute.changeMapXY(panzerArr[i].xMap, panzerArr[i].yMap, -2);
     }
     searchRoute.consoleMap();
+}
+function calcStepII(numCommand)
+{
+    for (let i = 0; i < panzerArr.length; i++)
+    {
+        if (panzerArr[i].being==true)
+        {
+
+        }
+    }
+}
+function redactGameMap()// редактировать карту
+{
+
+    if (checkPressKey('Delete')==true || checkPressKey('KeyD')==true)
+    {
+        let objUnderMouse = calcUnderMouseObj();
+        if (objUnderMouse.type=='blockage')
+        {  
+            blockageArr.splice(objUnderMouse.numInArr,1);
+        }
+        if (objUnderMouse.type=='panzer')
+        {  
+            if (numSelectPanzer!=objUnderMouse.numInArr)
+            {
+                panzerArr.splice(objUnderMouse.numInArr,1);
+            }
+           
+        }
+    }
+    if (checkPressKey('KeyW')==true || checkPressKey('KeyA')==true ||
+        checkPressKey('Digit1')==true || checkPressKey('Digit2')==true)
+    {
+        let objUnderMouse = calcUnderMouseObj();
+        if (objUnderMouse.type==null)
+        {
+            if (checkPressKey('KeyW')==true || checkPressKey('KeyA')==true)
+            {
+                let type = null;
+                if (checkPressKey('KeyW') == true) type = 0;
+                if (checkPressKey('KeyA') == true) type = 1;
+                var blockage = new Blockage(type, Math.trunc(mouseX / mapSize),Math.trunc( mouseY / mapSize));
+                // panzer.draw(context,camera,1);
+                blockage.lineArr=calcLineArr(blockage);
+                blockageArr.push(blockage);
+            }
+            if (checkPressKey('Digit1')==true || checkPressKey('Digit2')==true)
+            {
+                let command = null;
+                if (checkPressKey('Digit1') == true) command = 0;
+                if (checkPressKey('Digit2') == true) command = 1;
+                var panzer = new Panzer(command, Math.trunc(mouseX / mapSize),Math.trunc( mouseY / mapSize));
+                panzer.being = true;
+                // panzer.draw(context,camera,1);
+                
+                panzerArr.push(panzer);
+                let len = panzerArr.length - 1;
+                panzerArr[len].lineArr=calcLineArr(panzerArr[len],'panzer',len);
+                updateImUnderGunPanzer();
+                console.log(panzerArr);
+            }
+        }
+    }
+}
+function calcUnderMouseObj()// расчитать что находится под указателем мыши
+{
+    let objUnderMouse = { type: null, numInArr: null };
+    for (let i = 0; i < blockageArr.length;i++)
+    {
+        if (checkInObj(blockageArr[i], mouseX, mouseY)==true)
+        {
+            objUnderMouse.type = 'blockage';
+            objUnderMouse.numInArr = i;
+            break;
+        }
+    }
+    for (let i = 0; i < panzerArr.length;i++)
+    {
+      //  if (checkInObj(panzerArr[i], mouseX, mouseY)==true)
+        if (mouseX/mapSize > panzerArr[i].xMap && mouseX/mapSize < panzerArr[i].xMap+1 &&
+            mouseY/mapSize > panzerArr[i].yMap && mouseY/mapSize < panzerArr[i].yMap+1)
+        {
+            objUnderMouse.type = 'panzer';
+            objUnderMouse.numInArr = i;
+            break;
+        }
+    }
+    return objUnderMouse;
 }
 function crossingTwoPoint(x1,y1,x2,y2)// проверяет могут ли 2 точки соединиться по прямой без препятсвий стен
 {
@@ -939,15 +1029,17 @@ function crossLinePanzer(numPanz1,numPanz2)
     {
         for (let j = 0; j < panzerArr[i].lineArr.length;j++)
         {
-            
-            let line = panzerArr[i].lineArr[j];
-            let panz1 = panzerArr[numPanz1];
-            let panz2 = panzerArr[numPanz2];
-            if (line.numP!=numPanz1 && line.numP!=numPanz2)
+            if (panzerArr[i].being==true && panzerArr[j].being==true)
             {
-                if (IsCrossing(panz1.centrX, panz1.centrY,panz2.centrX, panz2.centrY,line.x,line.y,line.x1,line.y1)==true)
+                let line = panzerArr[i].lineArr[j];
+                let panz1 = panzerArr[numPanz1];
+                let panz2 = panzerArr[numPanz2];
+                if (line.numP!=numPanz1 && line.numP!=numPanz2)
                 {
-                    return true;
+                    if (IsCrossing(panz1.centrX, panz1.centrY,panz2.centrX, panz2.centrY,line.x,line.y,line.x1,line.y1)==true)
+                    {
+                        return true;
+                    }
                 }
             }
         }
