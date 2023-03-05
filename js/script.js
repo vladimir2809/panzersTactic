@@ -27,6 +27,9 @@ var searchRoute=null;// поиск пути
 var bullets = null;
 var numSelectPanzer = null;// номер выбраного танка
 var numCommandStep = 0;
+var autoGame = true;
+var dataII = null;
+var stepCommand = [null,null];
 var line = { x:null, y:null, x1:null, y1:null, numP:null };// линия для вычесления пересечений
 var map = {
     x:1,
@@ -73,6 +76,7 @@ function Panzer(command,xMap,yMap)
     this.route = [];// массив маршрута
     this.numPointRoute = null;// номер точки в маршруте
     this.lineArr = [];
+
     this.updateState=function()// обновить состояние танка, пересчитывается центральная точка
     {
         this.towerX=this.x-this.mixTowerX+this.mixTowerPosX;
@@ -106,6 +110,7 @@ function Panzer(command,xMap,yMap)
             context.restore();
         }
     }
+
     this.startMovingByRoute=function (route)// старт передвижения по маршруту
     {
         this.moving = true;
@@ -360,7 +365,7 @@ function create()
     context = canvas.getContext("2d");
     initKeyboardAndMouse(["Digit1", "Digit2", "KeyW",'KeyA',"Delete",'KeyD']);
     updateSize();
-    srand(1);
+    srand(1504);
     //context.scale(0.1, 0.1);
     //for (let i = 0; i < screenHeight / mapSize;i++)
     //{
@@ -368,7 +373,7 @@ function create()
     //   // panzer.draw(context,camera,1);
     //    panzerArr.push(panzer);
     //}
-    for (let i = 0; i < 10;i++)// создать танки
+    for (let i = 0; i < 30;i++)// создать танки
     {
         let xMap = null;
         let yMap = null;
@@ -383,7 +388,7 @@ function create()
         panzerArr.push(panzer);
     }
     console.log(panzerArr);
-    for (let i = 0; i < 100;i++)// создать препятствия
+    for (let i = 0; i < 50;i++)// создать препятствия
     {
         //let xMap = randomInteger(0,(map.width/mapSize)-1);
         //let yMap = randomInteger(0,(map.height/mapSize)-1);
@@ -421,10 +426,18 @@ function drawAll()// нарисовать все
     for (let i = 0; i < blockageArr.length;i++)
     {
         blockageArr[i].draw(context,camera,1);
+        
     } 
     for (let i = 0; i < panzerArr.length;i++)
     {
         panzerArr[i].draw(context,camera,1);
+        context.beginPath();
+        context.font = "25px serif";
+        context.fillStyle = 'white';
+        let x = panzerArr[i].x;
+        let y = panzerArr[i].y;
+        context.fillText(i+'', x+mapSize/2-camera.x-14 , y+mapSize/2-camera.y+6)
+        context.stroke();
     }
     bullets.drawBullets(context);
     for (let i = 0; i < blockageArr.length; i++)
@@ -473,6 +486,22 @@ function drawAll()// нарисовать все
          
         }
            
+    }
+    if (dataII!=null)
+    {
+        for (let i = 0; i < dataII.length;i++)
+        {
+            for (let j = 0; j < dataII[i].underGunArr.length;j++)
+            {
+                context.beginPath();
+                context.strokeStyle='green';
+                num1 = dataII[i].numPanz;
+                num2 = dataII[i].underGunArr[j];
+                context.moveTo(panzerArr[num1].centrX,panzerArr[num1].centrY); //передвигаем перо
+                context.lineTo(panzerArr[num2].centrX,panzerArr[num2].centrY); //рисуем линию
+                context.stroke();
+            }
+        }
     }
 }
 function drawLineArr(obj,color="#00FF00")// функция рисований линий, для расчета пересечений у конкретного обьекта
@@ -635,14 +664,16 @@ function update()// основной цикл игры
                                                                 panzerArr[i].centrX, panzerArr[i].centrY);
 
                     }
- 
+               
                 }
+             
                 // если кликнули на не выбранный танк
                 if (checkInObj(panzerArr[i],mouseX,mouseY)==true && panzerArr[i].command==0)
                 {
                     updateMapSearchRoute();
                     searchRoute.spreadingWave(panzerArr[i].xMap,panzerArr[i].yMap, 10);
                     numSelectPanzer = i;
+                    numCommandStep = 0;
                     updateImUnderGunPanzer();
                     panzerArr[i].attackThrow = false;
                  //   let route= searchRoute.getRoute(panzerArr[i].xMap,panzerArr[i].yMap, 100, 10,10);
@@ -652,9 +683,10 @@ function update()// основной цикл игры
 
 
                 }
+            
             }
-        }
-   
+        }   
+
         if (flagOldMouse==false)// 
         {
             
@@ -720,7 +752,32 @@ function update()// основной цикл игры
             if (speedMoveCamera.x == 0 && speedMoveCamera.y == 0) flagMoveCamera = false;
         }
     }
-    
+    if (stepCommand[numCommandStep]!=null && stepCommand[numCommandStep].numPanz!=null)
+    {
+        if(stepCommand[numCommandStep].complete==1 )
+        {
+            stepCommand[numCommandStep].complete = 2;
+            let numPanz = stepCommand[numCommandStep].numPanz;
+            let numPAtc = stepCommand[numCommandStep].numPanzAttack;
+            panzerArr[numPanz].attack = true;
+        //    alert(54);
+            panzerArr[numPanz].angleAim = angleIm(panzerArr[numPanz].centrX, panzerArr[numPanz].centrY, 
+                                                        panzerArr[numPAtc].centrX, panzerArr[numPAtc].centrY);
+        }
+        if (stepCommand[numCommandStep].complete==0 )
+        {
+            stepCommand[numCommandStep].complete = 1;
+            let numPanz = stepCommand[numCommandStep].numPanz;
+            numSelectPanzer = numPanz;
+         //   let numPAtc = stepCommand[1].numPanzAttack;
+           // alert(545215);
+            updateMapSearchRoute();
+            //searchRoute.spreadingWave(panzerArr[numPanz].xMap,panzerArr[numPanz].yMap, 10);
+           
+            updateImUnderGunPanzer();
+            panzerArr[numPanz].attackThrow = false;
+        }
+    }
     for (let i = 0; i < panzerArr.length;i++)
     {
         panzerArr[i].movingByRoute();// движение танка по маршруту
@@ -756,6 +813,7 @@ function update()// основной цикл игры
                 panzerArr[numPanz].tookAim = false;
                 console.log('angleTower='+panzerArr[numPanz].angleTower);
                 console.log('angleAIM='+panzerArr[numPanz].angleAim);
+                
             }
 }
     }
@@ -781,6 +839,7 @@ function update()// основной цикл игры
     //}
     bullets.update();
     collisioinBulets();
+    
     redactGameMap();
 }
 function moveCamera(speedX,speedY)// движение камеры от заданной скорости
@@ -827,18 +886,18 @@ function moveCamera(speedX,speedY)// движение камеры от зада
         camera.y = map.height-camera.height-1;
     }
 }
-function updateImUnderGunPanzer()
+function updateImUnderGunPanzer(forII=false,numP=null,command=1)
 {
-    if (numSelectPanzer!=null)
+    if (numSelectPanzer!=null || forII==true)
     {
-        numPanz = numSelectPanzer;
+        numPanz = (numP==null && forII==false)?numSelectPanzer:numP;
         for (let i = 0; i < panzerArr.length;i++)
         {
             panzerArr[i].imUnderGun=false;
         }
         for (let i = 0; i < panzerArr.length;i++)
         {
-            if (panzerArr[i].command==1 && panzerArr[i].being==true)
+            if (panzerArr[i].command==command && panzerArr[i].being==true)
             {
                 if (visiblePanzerToPanzer(numPanz,i)==true)
                 {
@@ -861,6 +920,8 @@ function collisioinBulets()// столкновение пуль с обьект�
                 if ( blockageArr[j].type==0 && checkInObj(blockageArr[j], bullets.bulletArr[i].x, bullets.bulletArr[i].y)==true)
                 {
                     bullets.kill(i);
+                    nextStepCommand();
+                    //calcStepII(1);
                 //    alert(589);
           
                 }
@@ -873,6 +934,8 @@ function collisioinBulets()// столкновение пуль с обьект�
                     bullets.kill(i);
                     panzerArr[j].being = false;
                     updateImUnderGunPanzer();
+                    nextStepCommand();
+                    //calcStepII(1);
                 //    alert(589);
           
                 }
@@ -880,6 +943,69 @@ function collisioinBulets()// столкновение пуль с обьект�
         }
 
     }
+}
+function calcStepII(numCommand)
+{
+    let attackObj = function () {
+        this.numPanz = null;
+        this.underGunArr = [];
+    };
+    let attackArr = [];
+    //for (let i = 0; i < panzerArr.length; i++)
+    //{
+    //    if (panzerArr[i].being==true)
+    //    {
+    //        updateImUnderGunPanzer(false, i, numCommand);
+    //    }
+    //}
+    for (let i = 0; i < panzerArr.length; i++)
+    if (panzerArr[i].being==true && panzerArr[i].command==numCommand)
+    {
+        let obj = new attackObj();
+        obj.numPanz = i;
+        for (let j = 0;  j < panzerArr.length;j++) 
+        if (panzerArr[j].being==true && i!=j)
+        {
+          
+            if (panzerArr[j].command!=numCommand )
+            {
+                if (visiblePanzerToPanzer(i,j)==true)
+                {
+                   obj.underGunArr.push(j);
+                        // drawSprite(context,imageArr.get('AIM'),panzerArr[i].x,panzerArr[i].y,camera,1)
+                }
+            }
+        }
+        attackArr.push(obj);
+    }
+    var step = {numPanz:null,numPanzAttack:null,complete:0};
+    for (let i = 0; i < attackArr.length;i++)
+    {
+        if (attackArr[i].underGunArr.length>0)
+        {
+            step.numPanz = attackArr[i].numPanz;
+            step.numPanzAttack = attackArr[i].underGunArr[0];
+            break;
+        }
+    }
+    console.log(attackArr);
+    stepCommand[numCommand] = step;
+    console.log(stepCommand);
+    dataII=attackArr;
+}
+function nextStepCommand ()
+{
+    numCommandStep += 1;
+    numCommandStep %= 2;
+    if (autoGame == true && numCommandStep == 0) 
+    {
+        calcStepII(0);
+    }
+    else
+    {
+        calcStepII(1);
+    }
+
 }
 function checkObjInCell(xCell,yCell)// есть ли обьект в этой клетке
 {
@@ -914,16 +1040,7 @@ function updateMapSearchRoute()// обновить карту для поиск�
     }
     searchRoute.consoleMap();
 }
-function calcStepII(numCommand)
-{
-    for (let i = 0; i < panzerArr.length; i++)
-    {
-        if (panzerArr[i].being==true)
-        {
 
-        }
-    }
-}
 function redactGameMap()// редактировать карту
 {
 
