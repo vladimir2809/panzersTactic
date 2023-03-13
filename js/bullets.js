@@ -4,6 +4,7 @@ Bullets = function () {
         x:null,
         y:null,
         angle:null,
+        DMG:null,
     }
     this.speed = 10;
     this.bulletArr = [];
@@ -30,13 +31,14 @@ Bullets = function () {
             this.bulletArr[num].being = false;
         }
     }
-    this.shot=function(x,y,angle)
+    this.shot=function(x,y,angle,DMG)
     {
         let bullet = clone(this.bullet);
         bullet.being = true;
         bullet.x = x;
         bullet.y = y;
         bullet.angle = angle;
+        bullet.DMG = DMG;
         this.bulletArr.push(bullet);
     }
     this.update=function()

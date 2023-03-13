@@ -13,7 +13,8 @@ var oldMouseX = null;
 var oldMouseY = null;
 var flagOldMouse = false;
 var imageArr = new Map();
-var nameImageArr=["body0","body1",'tower4','wall','water','AIM'];
+var nameImageArr=["body13","body12","body11","body21","body22","body23",'tower3','tower2','tower1',
+                  'wall','water','AIM','arrow','arrowBack'];
 var imageLoad = false;
 var countLoadImage = 0;
 var panzerArr = [];
@@ -44,29 +45,32 @@ var camera = {
     height: 800,//canvasHeight,
 }
 
-function Panzer(command,xMap,yMap)
+function Panzer(command,type,xMap,yMap)
 {
     this.xMap = xMap;
     this.yMap = yMap;
     this.command = command;
-    this.width = 35;
-    this.height = 35;
+    this.type = type;
+    this.width = panzerOption[type].width;
+    this.height = panzerOption[type].height;
     this.x = xMap * mapSize+(mapSize/2-this.width/2);
     this.y = yMap * mapSize+(mapSize/2-this.height/2);
-    this.bodyNameImage = this.command == 0 ? 'body0' : 'body1';
-    this.towerNameImage = 'tower4';
+    this.bodyNameImage = panzerOption[type].bodyNameImage//this.command == 0 ? 'body13' : 'body23';
+    this.towerNameImage = panzerOption[type].towerNameImage;
     this.angleBody = 90;
     this.angleTower = 90;
     this.towerX = null;// координаты башни 
     this.towerY = null;
-    this.mixTowerX = 8.5;// смешение башни
-    this.mixTowerY = 18.5;
-    this.mixTowerPosX = 17;
-    this.mixTowerPosY = 17;
+    this.mixTowerX = panzerOption[type].mixTowerX;// смешение башни
+    this.mixTowerY = panzerOption[type].mixTowerY;
+    this.mixTowerPosX = panzerOption[type].mixTowerPosX;
+    this.mixTowerPosY = panzerOption[type].mixTowerPosY;
     this.centrX = null;// серидина танка
     this.centrY = null;
-    this.HP = 100;
-    this.speed = 10;
+    this.maxHP = panzerOption[type].maxHP;
+    this.HP = this.maxHP;
+    this.speed = panzerOption[type].speed;
+    this.DMG = panzerOption[type].DMG;
     this.moving = false;// танк двигается
     this.endMove == true;// танк закончил движение
     this.oldEndMove = this.endMove;
@@ -78,7 +82,11 @@ function Panzer(command,xMap,yMap)
     this.route = [];// массив маршрута
     this.numPointRoute = null;// номер точки в маршруте
     this.lineArr = [];
-
+    if (command==1)
+    {
+        let str=this.bodyNameImage;
+        this.bodyNameImage=str.replace('body1','body2');;
+    }
     this.updateState=function()// обновить состояние танка, пересчитывается центральная точка
     {
         this.towerX=this.x-this.mixTowerX+this.mixTowerPosX;
@@ -205,6 +213,51 @@ function Blockage(type,xMap,yMap)// класс препятствие
     {
         drawSprite(context,imageArr.get(this.nameImage),this.x,this.y,camera,scale)
     }
+}
+function Interface()
+{
+    this.x = 1;
+    this.y = screenHeight - 2 * mapSize;
+    this.width = screenWidth;
+    this.height = 2 * mapSize;
+    this.arrowGo = {
+        x: 650,
+        y: 27,
+        width: 40,
+        height: 20,
+        nameImage: 'arrow',
+    };
+    this.arrowBack = {
+        x: 60,
+        y: 22,
+        width: 40,
+        height: 20,
+        nameImage: 'arrowBack',
+    };
+    this.drawArrowGo = function () 
+    {
+        drawSprite(context,imageArr.get(this.arrowGo.nameImage),
+                            this.x+this.arrowGo.x,this.y+this.arrowGo.y,camera,1)
+    };
+    this.drawArrowBack = function () 
+    {
+        drawSprite(context,imageArr.get(this.arrowBack.nameImage),
+                            this.x+this.arrowBack.x,this.y+this.arrowBack.y,camera,1)
+    };
+    this.draw=function ()
+    {
+        //context.fillStyle='rgb(150,70,0)';
+        context.save();
+        context.fillStyle='rgb(205,133,63)';
+        context.fillRect(this.x,this.y,this.width,this.height);
+        context.strokeStyle = 'rgb(150,70,0)';
+        context.lineWidth = 3;
+        context.strokeRect(this.x,this.y,this.width-2,this.height-2);
+        context.restore();
+        this.drawArrowGo();
+        this.drawArrowBack();
+    }
+
 }
 function calcLineArr(obj,type="blockage",numP=null)// расчитать массив линий для обьекта
 {
@@ -372,9 +425,9 @@ function createRandomMap(quantityBlockage,quantityPanzer)
         let yMap = null;
         do {
             xMap = randomInteger(0, (map.width / mapSize) - 1);
-            yMap = randomInteger(0, (map.height / mapSize) - 1);
+            yMap = randomInteger(0, (map.height / mapSize) - 1-2);
         } while (checkObjInCell(xMap, yMap) == true);
-        var panzer = new Panzer(i % 2, xMap, yMap);
+        var panzer = new Panzer(i % 2, randomInteger(0,2), xMap, yMap);
         panzer.being = true;
         panzer.lineArr=calcLineArr(panzer,'panzer',i);
        // panzer.draw(context,camera,1);
@@ -389,7 +442,7 @@ function createRandomMap(quantityBlockage,quantityPanzer)
         let yMap = null;
         do {
             xMap = randomInteger(0, (map.width / mapSize) - 1);
-            yMap = randomInteger(0, (map.height / mapSize) - 1);
+            yMap = randomInteger(0, (map.height / mapSize) - 1-2);
         } while (checkObjInCell(xMap, yMap) == true);
         var blockage = new Blockage(randomInteger(0,0),xMap,yMap)
         // panzer.draw(context,camera,1);
@@ -402,7 +455,7 @@ function create()
 {
     canvas = document.getElementById("canvas");
     context = canvas.getContext("2d");
-    initKeyboardAndMouse(["Digit1", "Digit2", "KeyW",'KeyA',"Delete",'KeyD','F2','KeyP','KeyL']);
+    initKeyboardAndMouse(["Digit1", "Digit2","Digit3", "Digit4","Digit5", "Digit6", "KeyW",'KeyA',"Delete",'KeyD','F2','KeyP','KeyL']);
     updateSize();
     srand(14);
     //context.scale(0.1, 0.1);
@@ -448,6 +501,7 @@ function create()
     searchRoute = new SearchRoute();
     searchRoute.initMap(map.width/mapSize,map.height/mapSize);
     bullets = new Bullets();
+    interface = new Interface();
     //map2[1][1] = 'N';
     //console.log(map2);
    
@@ -477,16 +531,17 @@ function drawAll()// нарисовать все
         {
             drawLineArr(panzerArr[i],"red")
             context.fillStyle= 'red';
-            context.fillRect(panzerArr[i].x, panzerArr[i].y - 5, panzerArr[i].width,4);
+            context.fillRect(panzerArr[i].x, panzerArr[i].y - 7, panzerArr[i].width,4);
             context.fillStyle= 'green';
-            context.fillRect(panzerArr[i].x, panzerArr[i].y - 5, panzerArr[i].width*panzerArr[i].HP/100,4);
-            context.beginPath();
-            context.font = "25px serif";
-            context.fillStyle = 'white';
-            let x = panzerArr[i].x;
-            let y = panzerArr[i].y;
-            context.fillText(i+'', x+mapSize/2-camera.x-14 , y+mapSize/2-camera.y+6)
-            context.stroke();
+            context.fillRect(panzerArr[i].x, panzerArr[i].y - 7,
+                            panzerArr[i].width*panzerArr[i].HP/panzerArr[i].maxHP,4);
+            //context.beginPath();
+            //context.font = "25px serif";
+            //context.fillStyle = 'white';
+            //let x = panzerArr[i].x;
+            //let y = panzerArr[i].y;
+            //context.fillText(i+'', x+mapSize/2-camera.x-14 , y+mapSize/2-camera.y+6)
+            //context.stroke();
 
         };
     }
@@ -503,7 +558,7 @@ function drawAll()// нарисовать все
         {
             if (panzerArr[i].imUnderGun==true)
             {
-                drawSprite(context,imageArr.get('AIM'),panzerArr[i].x,panzerArr[i].y,camera,1)
+                drawSprite(context,imageArr.get('AIM'),panzerArr[i].xMap*mapSize,panzerArr[i].yMap*mapSize,camera,1)
             }
          
         }
@@ -516,10 +571,11 @@ function drawAll()// нарисовать все
         context.beginPath();
         context.font = "18px serif";
         context.fillStyle = 'yellow';
-        context.fillText('AUTOGAME', 10, screenHeight - 20);
+        context.fillText('AUTOGAME', 10, screenHeight - mapSize*2- 20);
         context.stroke();
 
     }
+    interface.draw();
 }
 function drawVisibleAttackLine(context)
 {
@@ -903,7 +959,8 @@ function update()// основной цикл игры
             }
             if (panzerArr[numPanz].tookAim==true)
             {
-                bullets.shot(panzerArr[numPanz].centrX, panzerArr[numPanz].centrY,panzerArr[numPanz].angleTower );
+                bullets.shot(panzerArr[numPanz].centrX, panzerArr[numPanz].centrY,
+                            panzerArr[numPanz].angleTower,panzerArr[numPanz].DMG );
                 panzerArr[numPanz].attack = false;
                 panzerArr[numPanz].attackThrow = true;
                 panzerArr[numPanz].tookAim = false;
@@ -1012,9 +1069,9 @@ function collisioinBulets()// столкновение пуль с обьект�
                 if ( j!=numSelectPanzer && panzerArr[j].being==true &&
                     checkInObj(panzerArr[j], bullets.bulletArr[i].x, bullets.bulletArr[i].y)==true)
                 {
+                    panzerArr[j].HP -= bullets.bulletArr[i].DMG;
                     bullets.kill(i);
 
-                    panzerArr[j].HP -= 50;
                     if (panzerArr[j].HP<=0)
                     {
                         panzerArr[j].being = false;
@@ -1022,7 +1079,7 @@ function collisioinBulets()// столкновение пуль с обьект�
                         
                     }
                     updateImUnderGunPanzer();
-                    if (stepCommand[numCommandStep].attack==true && stepCommand[numCommandStep].complete==3)
+                   // if (stepCommand[numCommandStep].attack==true && stepCommand[numCommandStep].complete==3)
                     {
                         nextStepCommand();
                     }
@@ -1053,7 +1110,7 @@ function calcStepII(numCommand)
     //} 
     var step = {numPanz:null,numPanzAttack:null,attack:true,pointAttack:{xMap:null,yMap:null,dist:null},complete:0};
     var numPanzMinHP = null;
-    var minHP = 100;
+    var minHP = 1000;
     var ExceptionNumPanz = [];
     var quantityPanzInCommand = [0, 0];
     let flagVisible = false;
@@ -1069,7 +1126,7 @@ function calcStepII(numCommand)
     }
     function calcNumPanzMinHP()
     {
-        minHP = 100;
+        minHP = 1000;
         for (let i = 0; i < panzerArr.length;i++)
         {
             if (panzerArr[i].HP<=minHP && checkElemArr(ExceptionNumPanz,i)==false &&
@@ -1388,7 +1445,9 @@ function redactGameMap()// редактировать карту
         }
     }
     if (checkPressKey('KeyW')==true || checkPressKey('KeyA')==true ||
-        checkPressKey('Digit1')==true || checkPressKey('Digit2')==true)
+        checkPressKey('Digit1')==true || checkPressKey('Digit2')==true||
+        checkPressKey('Digit3')==true || checkPressKey('Digit4')==true||
+        checkPressKey('Digit5')==true || checkPressKey('Digit6')==true)
     {
         let objUnderMouse = calcUnderMouseObj();
         if (objUnderMouse.type==null)
@@ -1403,12 +1462,18 @@ function redactGameMap()// редактировать карту
                 blockage.lineArr=calcLineArr(blockage);
                 blockageArr.push(blockage);
             }
-            if (checkPressKey('Digit1')==true || checkPressKey('Digit2')==true)
+            if (checkPressKey('Digit1')==true || checkPressKey('Digit2')==true||
+                checkPressKey('Digit3')==true || checkPressKey('Digit4')==true||
+                checkPressKey('Digit5')==true || checkPressKey('Digit6')==true)
             {
                 let command = null;
-                if (checkPressKey('Digit1') == true) command = 0;
-                if (checkPressKey('Digit2') == true) command = 1;
-                var panzer = new Panzer(command, Math.trunc(mouseX / mapSize),Math.trunc( mouseY / mapSize));
+                let type = null;
+                if (checkPressKey('Digit1') == true || checkPressKey('Digit2') == true||checkPressKey('Digit3') == true) command = 0;
+                if (checkPressKey('Digit4') == true|| checkPressKey('Digit5') == true||checkPressKey('Digit6') == true) command = 1;
+                if (checkPressKey('Digit1') == true || checkPressKey('Digit4') == true) type = 0;
+                if (checkPressKey('Digit2') == true || checkPressKey('Digit5') == true) type = 1;
+                if (checkPressKey('Digit3') == true || checkPressKey('Digit6') == true) type = 2;
+                var panzer = new Panzer(command,type, Math.trunc(mouseX / mapSize),Math.trunc( mouseY / mapSize));
                 panzer.being = true;
                 // panzer.draw(context,camera,1);
                 
@@ -1437,7 +1502,8 @@ function redactGameMap()// редактировать карту
         {
             if (panzerArr[i].being==true)
             {
-                dataPanzer.push({xMap:panzerArr[i].xMap,yMap:panzerArr[i].yMap,command:panzerArr[i].command});
+                dataPanzer.push({xMap:panzerArr[i].xMap,yMap:panzerArr[i].yMap,
+                        command:panzerArr[i].command,type:panzerArr[i].type});
             }
 
         }
@@ -1458,7 +1524,7 @@ function loadGameMap(numMap)
     let data = mapArr[numMap];
     for (let i = 0; i < data.panzer.length;i++)
     {
-        var panzer = new Panzer(data.panzer[i].command, 
+        var panzer = new Panzer(data.panzer[i].command,randomInteger(0,2)/*data.panzer[i].type*/, 
                         data.panzer[i].xMap, data.panzer[i].yMap);
         panzer.being = true;
         panzer.lineArr=calcLineArr(panzer,'panzer',i);
