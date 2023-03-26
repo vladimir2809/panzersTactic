@@ -50,6 +50,18 @@ function SearchRoute()
         return mapBuffer;
 
     }
+    this.deleteData=function()
+    {
+        while (this.wavePointArr.length>0)
+        {
+            this.wavePointArr.splice(0, 1);
+        }
+        while (this.routePointArr.length>0)
+        {
+            this.routePointArr.splice(0, 1);
+        }
+    }
+
     this.spreadingWave=function(xStart,yStart,distance,xFinish=null,yFinish=null)// распространение волны для поиска пути
     {
         
@@ -60,14 +72,7 @@ function SearchRoute()
         this.finishEnd = false;
         this.maxValueWave = 0;
         this.mapWave = this.cloneMap();
-        while (this.wavePointArr.length>0)
-        {
-            this.wavePointArr.splice(0, 1);
-        }
-        while (this.routePointArr.length>0)
-        {
-            this.routePointArr.splice(0, 1);
-        }
+        this.deleteData();
         for (let k = 1; k < distance;k++)
         {
             if (k==1)
