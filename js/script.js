@@ -14,7 +14,7 @@ var oldMouseY = null;
 var flagOldMouse = false;
 var imageArr = new Map();
 var nameImageArr=["body13","body12","body11","body21","body22","body23",'tower3','tower2','tower1',
-                  'wall','water','AIM','arrow','arrowBack','video'];
+                  'wall','water','AIM','arrow','arrowBack','video','lock'];
 var imageLoad = false;
 var countLoadImage = 0;
 var panzerArr = [];
@@ -36,7 +36,11 @@ var stepCommand = [null,null];
 var autoAttack = false;
 var listBackStep = [];
 var backStepOne = [];
+var gameLevel = 1;
 var panzerMoveFlag = false;// выбранный танк в этом ходу двигался
+var quantityPanzInCommand = [0, 0];
+var levelGameOpen = [1,]// список открытых уровней
+var levelGame = 0;// текуший уровень игры
 var line = { x:null, y:null, x1:null, y1:null, numP:null };// линия для вычесления пересечений
 var map = {
     x:1,
@@ -49,8 +53,7 @@ var camera = {
     y:0,
     width: canvasWidth,
     height:canvasHeight-mapSize*2,
-}
-
+};
 function Panzer(command,type,xMap,yMap)
 {
     this.xMap = xMap;
@@ -233,7 +236,7 @@ function Blockage(type,xMap,yMap)// класс препятствие
         drawSprite(context,imageArr.get(this.nameImage),this.x,this.y,camera,scale)
     }
 }
-function Interface()
+function Interface()// класс интерфейса внизу экрана
 {
     this.being = true;
     this.x = 1;
@@ -262,17 +265,17 @@ function Interface()
         height: 40,
         nameImage: 'video',
     };
-    this.drawArrowGo = function () 
+    this.drawArrowGo = function () // нарисовать стрелку вперед
     {
         drawSprite(context,imageArr.get(this.arrowGo.nameImage),
                             this.x+this.arrowGo.x,this.y+this.arrowGo.y,camera,1)
     };
-    this.drawArrowBack = function () 
+    this.drawArrowBack = function () // нарисовать стрелку отменить ход
     {
         drawSprite(context,imageArr.get(this.arrowBack.nameImage),
                             this.x+this.arrowBack.x,this.y+this.arrowBack.y,camera,1)
     };
-    this.drawVideoButton = function () 
+    this.drawVideoButton = function () // нарисовать значок смотреть видео
     {
         drawSprite(context,imageArr.get(this.videoButton.nameImage),
                             this.x+this.videoButton.x,this.y+this.videoButton.y,camera,1)
@@ -350,8 +353,11 @@ function Interface()
             }
             if (mouseIn == 'arrowGo') 
             {
-                saveStepData(panzerArr);
-                addListBackStep();
+                if (movePanzerGreen==false)
+                {
+                    saveStepData(panzerArr);
+                    addListBackStep();
+                }
                 nextStepCommand();
             }
             if (mouseIn == 'videoButton') { };
@@ -371,6 +377,72 @@ function Interface()
 
     }
 
+}
+function BigText()// класс большой текст
+{
+    this.being = false;
+    this.count = 0;
+    this.maxCount = 0;
+    this.str = '';
+    this.color = "#FF0000";
+    this.value = null;
+    this.draw = function ()
+    {
+        if (this.being==true)
+        {
+            context.font = "58px Arial";
+            context.fillStyle=this.color;
+            let widthText=context.measureText(this.str).width+10;
+            let x=screenWidth/2-widthText/2;
+            context.fillText(this.str,x,380);
+        }
+    }
+    this.init= function (str,color,maxCount,value)
+    {
+        this.being=true;
+        this.str=str;
+        this.color=color;
+        this.maxCount=maxCount;
+        this.value=value;
+        //pause=true;
+    
+    }
+    this.control = function ()
+    {
+        if (this.being==true)
+        {
+            if (this.maxCount!=0) this.count++;
+           // pause=true;
+            if (this.count>=this.maxCount)
+            {
+                this.being=false;
+                //pause=false;
+                this.count=0;
+                switch (this.value)
+                {
+                    case 1://  уровень пройден
+                    {
+                        //levelGame++;
+                        if (checkElemArr(levelGameOpen,levelGame + 2)==false)
+                        {
+                            levelGameOpen.push(levelGame + 2);
+                        }
+                        windowLevel.start();
+                        autoGame = false;
+                        
+                    }
+                    break;
+                    case 2:// вы проиграли
+                    {
+                        windowLevel.start();
+                        autoGame = false;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    
 }
 function calcLineArr(obj,type="blockage",numP=null)// расчитать массив линий для обьекта
 {
@@ -411,28 +483,6 @@ function calcLineArr(obj,type="blockage",numP=null)// расчитать мас�
     }
     return lineArr;
 }
-//function drawPanzer(context,panzer,camera,scale)// функция рисования танка вместе с башней
-//{
-//    if(!context || !imageArr.get(panzer.bodyNameImage) || !imageArr.get(panzer.towerNameImage )) return;
-//    context.save();
-    
-//    context.translate((panzer.x+panzer.width/2-camera.x)*scale,
-//                        (panzer.y+panzer.height/2-camera.y)*scale);
-//    context.scale(scale,scale);
-//    context.rotate(panzer.angleBody*Math.PI/180);                  
-//    context.drawImage(imageArr.get(panzer.bodyNameImage),-panzer.width/2/*-camera.x*/,
-//                       /*panzer.y-*/-panzer.height/2/*-camera.y*/);
-//    context.restore();
-    
-//    context.save();
-//    context.translate((panzer.towerX+panzer.mixTowerX-camera.x)*scale,
-//                        (panzer.towerY+panzer.mixTowerY-camera.y)*scale);
-//    context.scale(scale,scale);
-//    context.rotate(panzer.angleTower*Math.PI/180);
-//    context.drawImage(imageArr.get(panzer.towerNameImage),-panzer.mixTowerX,-panzer.mixTowerY);
-//    context.restore();
-// //   console.log(panzer.bodyNameImage);
-//}
 function loadImageArr()// загрузить массив изображений
 {
     // заполняем массив изображений именами
@@ -469,7 +519,10 @@ window.addEventListener('load', function () {
 
     //setInterval(drawAll, 6);
     setInterval(function()  {
-        if (mainMenu.being==false)update();
+        if (mainMenu.being==false && windowLevel.being==false) // если не открыты мени и окно выбора уровней
+        {
+            update();// основной цикл игры
+        }
         drawAll();
     },6);
 
@@ -531,7 +584,7 @@ function preload()
    
    
 }
-function createRandomMap(quantityBlockage,quantityPanzer)
+function createRandomMap(quantityBlockage,quantityPanzer) // сгенировать случайную карту
 {
     for (let i = 0; i < quantityPanzer;i++)// создать танки
     {
@@ -574,43 +627,6 @@ function create()
                             "Delete",'KeyD','F2','KeyP','KeyL']);
     updateSize();
     srand(1415);
-    //context.scale(0.1, 0.1);
-    //for (let i = 0; i < screenHeight / mapSize;i++)
-    //{
-    //    var panzer = new Panzer(0, 1, i);
-    //   // panzer.draw(context,camera,1);
-    //    panzerArr.push(panzer);
-    //}
-    //for (let i = 0; i < 8;i++)// создать танки
-    //{
-    //    let xMap = null;
-    //    let yMap = null;
-    //    do {
-    //        xMap = randomInteger(0, (map.width / mapSize) - 1);
-    //        yMap = randomInteger(0, (map.height / mapSize) - 1);
-    //    } while (checkObjInCell(xMap, yMap) == true);
-    //    var panzer = new Panzer(i % 2, xMap, yMap);
-    //    panzer.being = true;
-    //    panzer.lineArr=calcLineArr(panzer,'panzer',i);
-    //   // panzer.draw(context,camera,1);
-    //    panzerArr.push(panzer);
-    //}
-    //console.log(panzerArr);
-    //for (let i = 0; i < 100;i++)// создать препятствия
-    //{
-    //    //let xMap = randomInteger(0,(map.width/mapSize)-1);
-    //    //let yMap = randomInteger(0,(map.height/mapSize)-1);
-    //    let xMap = null;
-    //    let yMap = null;
-    //    do {
-    //        xMap = randomInteger(0, (map.width / mapSize) - 1);
-    //        yMap = randomInteger(0, (map.height / mapSize) - 1);
-    //    } while (checkObjInCell(xMap, yMap) == true);
-    //    var blockage = new Blockage(randomInteger(0,1),xMap,yMap)
-    //    // panzer.draw(context,camera,1);
-    //    blockage.lineArr=calcLineArr(blockage);
-    //    blockageArr.push(blockage);
-    //}
 
    // loadGameMap(0);
     mainMenu = new MainMenu();
@@ -621,6 +637,7 @@ function create()
     createRandomMap(100,18);
     bullets = new Bullets();
     interface = new Interface();
+    bigText = new BigText();
     //map2[1][1] = 'N';
     //console.log(map2);
    
@@ -717,6 +734,7 @@ function drawAll()// нарисовать все
                             panzerArr[i].width*panzerArr[i].HP/panzerArr[i].maxHP,4);
         }
     }
+    bigText.draw();
    
 }
 function drawVisibleAttackLine(context)
@@ -1180,6 +1198,7 @@ function update()// основной цикл игры
     collisioinBulets();
     interface.update();
     redactGameMap();
+    bigText.control();
 }
 function moveCamera(speedX,speedY)// движение камеры от заданной скорости
 {
@@ -1283,6 +1302,15 @@ function collisioinBulets()// столкновение пуль с обьект�
                     {
                         panzerArr[j].being = false;
                         updateMapSearchRoute();
+                        calcQuantityPanz();
+                        if (quantityPanzInCommand[0]==0)
+                        {
+                            bigText.init('Вы проиграли!', 'red', 500, 2);
+                        }
+                        if (quantityPanzInCommand[1]==0)
+                        {
+                            bigText.init('Уровень пройден!', 'green', 500, 1);
+                        }
                         
                     }
                     updateImUnderGunPanzer();
@@ -1301,6 +1329,18 @@ function collisioinBulets()// столкновение пуль с обьект�
         }
 
     }
+}
+function calcQuantityPanz()
+{
+    quantityPanzInCommand[0] = 0;
+    quantityPanzInCommand[1] = 0;
+    for (let i = 0; i < panzerArr.length;i++)
+    {
+        if (panzerArr[i].command == 0 && panzerArr[i].being== true) quantityPanzInCommand[0]++;
+        if (panzerArr[i].command == 1 && panzerArr[i].being== true) quantityPanzInCommand[1]++;
+
+    }
+
 }
 function calcStepII(numCommand,numPanzStep=null,numPanzForAttack=null)
 {
@@ -1322,18 +1362,8 @@ function calcStepII(numCommand,numPanzStep=null,numPanzForAttack=null)
     var numPanzMinHP = null;
     var minHP = 1000;
     var ExceptionNumPanz = [];
-    var quantityPanzInCommand = [0, 0];
     let flagVisible = false;
-    function calcQuantityPanz()
-    {
-        for (let i = 0; i < panzerArr.length;i++)
-        {
-            if (panzerArr[i].command == 0 && panzerArr[i].being== true) quantityPanzInCommand[0]++;
-            if (panzerArr[i].command == 1 && panzerArr[i].being== true) quantityPanzInCommand[1]++;
 
-        }
-
-    }
     function calcNumPanzMinHP()
     {
         minHP = 1000;
@@ -1762,6 +1792,8 @@ function redactGameMap()// редактировать карту
             {
                 let command = null;
                 let type = null;
+               // (str,color,maxCount,value)
+                bigText.init('Вы установили танк','green',300,3);
                 if (checkPressKey('Digit1') == true ||
                     checkPressKey('Digit2') == true||checkPressKey('Digit3') == true) 
                 {
