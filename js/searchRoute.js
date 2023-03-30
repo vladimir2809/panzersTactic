@@ -21,10 +21,10 @@ function SearchRoute()
         {
             this.map.splice(0, 1);
         }
-        for (let i = 0; i < widthCell;i++)
+        for (let i = 0; i < heightCell;i++)
         {
             let arrWidth = [];
-            for (let j = 0; j < heightCell;j++)
+            for (let j = 0; j < widthCell;j++)
             {
                 let elem=0;
                 arrWidth.push(elem);
@@ -46,8 +46,22 @@ function SearchRoute()
             arrElemCopy(buffer, this.map[i]);
             mapBuffer.push(buffer);
         }
+        console.log(mapBuffer);
         return mapBuffer;
+
     }
+    this.deleteData=function()
+    {
+        while (this.wavePointArr.length>0)
+        {
+            this.wavePointArr.splice(0, 1);
+        }
+        while (this.routePointArr.length>0)
+        {
+            this.routePointArr.splice(0, 1);
+        }
+    }
+
     this.spreadingWave=function(xStart,yStart,distance,xFinish=null,yFinish=null)// распространение волны для поиска пути
     {
         
@@ -58,14 +72,7 @@ function SearchRoute()
         this.finishEnd = false;
         this.maxValueWave = 0;
         this.mapWave = this.cloneMap();
-        while (this.wavePointArr.length>0)
-        {
-            this.wavePointArr.splice(0, 1);
-        }
-        while (this.routePointArr.length>0)
-        {
-            this.routePointArr.splice(0, 1);
-        }
+        this.deleteData();
         for (let k = 1; k < distance;k++)
         {
             if (k==1)
@@ -109,7 +116,7 @@ function SearchRoute()
                 }
             }
         }
-        console.log(this.wavePointArr);
+       // console.log(this.wavePointArr);
     }
     this.stepWave=function(xMap,yMap,value)// функция котороя соседним клеткам присваевает плюс один
     {
@@ -122,8 +129,7 @@ function SearchRoute()
         for (let i = 0; i < addArr.length;i++)
         {
             if (this.checkCellXY(xMap+addArr[i].xMap,yMap+addArr[i].yMap)==true &&
-                (xMap+addArr[i].xMap==this.xStart && yMap+addArr[i].yMap==this.yStart)==false
-               )
+                (xMap+addArr[i].xMap==this.xStart && yMap+addArr[i].yMap==this.yStart)==false )
             {
    
                 this.mapWave[yMap+addArr[i].yMap][xMap+addArr[i].xMap] = value + 1;
@@ -147,7 +153,7 @@ function SearchRoute()
             {xMap:0,yMap:1},
             {xMap:-1,yMap:0},
         ];
-        console.log("this.maxValueWave " +this.maxValueWave)
+      //  console.log("this.maxValueWave " +this.maxValueWave)
         for (let i = this.maxValueWave; i >= 1; i--)
         { 
             let point = clone(this.point);
@@ -182,7 +188,7 @@ function SearchRoute()
             }
             this.routePointArr.push(point);
         }
-         console.log(this.routePointArr);
+      //   console.log(this.routePointArr);
          
     }
     this.getRoute=function(xStart,yStart,distance,xFinish=null,yFinish=null)
@@ -196,7 +202,7 @@ function SearchRoute()
     }
     this.checkCellXY=function(xMap,yMap)
     {  
-        if (yMap<0 || yMap>=this.widthCell || xMap<0 || xMap>=this.heightCell)
+        if (yMap<0 || yMap>=this.heightCell || xMap<0 || xMap>=this.widthCell)
         {
             return false;
         }
