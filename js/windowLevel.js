@@ -92,7 +92,8 @@
             this.close();
             levelGame=this.levelSelect-1
             loadGameMap(levelGame);
-            
+            burst.start(panzerArr[2].centrX,panzerArr[2].centrY);
+            console.log(panzerArr[0].centrX+" "+panzerArr[0].centrY);
         }
     }
 

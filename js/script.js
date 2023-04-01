@@ -14,7 +14,7 @@ var oldMouseY = null;
 var flagOldMouse = false;
 var imageArr = new Map();
 var nameImageArr=["body13","body12","body11","body21","body22","body23",'tower3','tower2','tower1',
-                  'wall','water','AIM','arrow','arrowBack','video','lock'];
+                  'wall','water','AIM','arrow','arrowBack','video','lock','Explosion'];
 var imageLoad = false;
 var countLoadImage = 0;
 var panzerArr = [];
@@ -38,10 +38,12 @@ var listBackStep = [];
 var backStepOne = [];
 var gameLevel = 1;
 var panzerMoveFlag = false;// выбранный танк в этом ходу двигался
+var numPanzerDead = null;
 var quantityPanzInCommand = [0, 0];
 var levelGameOpen = [1,]// список открытых уровней
 var levelGame = 0;// текуший уровень игры
 var line = { x:null, y:null, x1:null, y1:null, numP:null };// линия для вычесления пересечений
+var audio = null;
 var map = {
     x:1,
     y:1,
@@ -74,8 +76,8 @@ function Panzer(command,type,xMap,yMap)
     this.mixTowerY = panzerOption[type].mixTowerY;
     this.mixTowerPosX = panzerOption[type].mixTowerPosX;
     this.mixTowerPosY = panzerOption[type].mixTowerPosY;
-    this.centrX = null;// серидина танка
-    this.centrY = null;
+    this.centrX = this.x + this.width / 2;// серидина танка
+    this.centrY = this.y + this.height / 2;
     this.maxHP = panzerOption[type].maxHP;
     this.HP = this.maxHP;
     this.speed = panzerOption[type].speed;
@@ -361,6 +363,10 @@ function Interface()// класс интерфейса внизу экрана
                 nextStepCommand();
             }
             if (mouseIn == 'videoButton') { };
+            if (mouseIn == 'arrowGo' || mouseIn == 'arrowBack')
+            {
+                audio.play('click');
+            }
             resetMouseLeft();
             console.log('listBackStep');
             console.log(listBackStep);
@@ -524,7 +530,7 @@ window.addEventListener('load', function () {
             update();// основной цикл игры
         }
         drawAll();
-    },6);
+    },16);
 
 });
 window.onresize = function()
@@ -581,6 +587,20 @@ function updateSize()// изменить размер изображений д�
 function preload()
 {
     loadImageArr();
+    audio = new Howl({
+        src: ['sound/sound.mp3'],
+        volume: 0.4,
+        sprite:{
+            shot: [6566,1603],
+            burstPanzer: [1,700], 
+            click: [9678,265], 
+            // soundTrack:[10*1000,4*60*1000,true]
+        },
+       
+    //        onend: function () {
+    //          console.log('Finished sound!');
+    //     }
+    });
    
    
 }
@@ -638,6 +658,9 @@ function create()
     bullets = new Bullets();
     interface = new Interface();
     bigText = new BigText();
+    burst = new Burst();
+    burst.init();
+    
     //map2[1][1] = 'N';
     //console.log(map2);
    
@@ -735,6 +758,7 @@ function drawAll()// нарисовать все
         }
     }
     bigText.draw();
+    burst.draw();
    
 }
 function drawVisibleAttackLine(context)
@@ -1180,6 +1204,7 @@ function update()// основной цикл игры
             {
                 bullets.shot(panzerArr[numPanz].centrX, panzerArr[numPanz].centrY,
                             panzerArr[numPanz].angleTower,panzerArr[numPanz].DMG );
+                audio.play("shot");
                 panzerArr[numPanz].attack = false;
                 panzerArr[numPanz].attackThrow = true;
                 panzerArr[numPanz].tookAim = false;
@@ -1194,11 +1219,32 @@ function update()// основной цикл игры
         autoGame = !autoGame;
         if (autoGame==true) calcStepII(numCommandStep);
     }
+    burst.end(function () {
+        if (numPanzerDead!=null)
+        {
+            panzerArr[numPanzerDead].being = false;
+            numPanzerDead = null;
+            //burst.start(panzerArr[j].centrX, panzerArr[j].centrY);
+            updateMapSearchRoute();
+            calcQuantityPanz();
+           // audio.play("burstPanzer");
+            if (quantityPanzInCommand[0]==0)
+            {
+                bigText.init('Вы проиграли!', 'red', 500, 2);
+            }
+            if (quantityPanzInCommand[1]==0)
+            {
+                bigText.init('Уровень пройден!', 'green', 500, 1);
+            }
+            nextStepCommand();
+        }
+    });
     bullets.update();
     collisioinBulets();
     interface.update();
     redactGameMap();
     bigText.control();
+    burst.update();
 }
 function moveCamera(speedX,speedY)// движение камеры от заданной скорости
 {
@@ -1300,20 +1346,24 @@ function collisioinBulets()// столкновение пуль с обьект�
                     }
                     if (panzerArr[j].HP<=0)
                     {
-                        panzerArr[j].being = false;
-                        updateMapSearchRoute();
-                        calcQuantityPanz();
-                        if (quantityPanzInCommand[0]==0)
-                        {
-                            bigText.init('Вы проиграли!', 'red', 500, 2);
-                        }
-                        if (quantityPanzInCommand[1]==0)
-                        {
-                            bigText.init('Уровень пройден!', 'green', 500, 1);
-                        }
+                        //panzerArr[j].being = false;
+                        burst.start(panzerArr[j].centrX, panzerArr[j].centrY);
+                        numPanzerDead = j;
+                        audio.play("burstPanzer");
+                        //updateMapSearchRoute();
+                        //calcQuantityPanz();
+                        
+                        //if (quantityPanzInCommand[0]==0)
+                        //{
+                        //    bigText.init('Вы проиграли!', 'red', 500, 2);
+                        //}
+                        //if (quantityPanzInCommand[1]==0)
+                        //{
+                        //    bigText.init('Уровень пройден!', 'green', 500, 1);
+                        //}
                         
                     }
-                    updateImUnderGunPanzer();
+                    else
                    // if (stepCommand[numCommandStep].attack==true && stepCommand[numCommandStep].complete==3)
                     {
                         //if (numCommandStep==1 /*&& autogame==false*/) 
@@ -1321,6 +1371,7 @@ function collisioinBulets()// столкновение пуль с обьект�
                         nextStepCommand();
                       
                     }
+                    updateImUnderGunPanzer();
                     //calcStepII(1);
                 //    alert(589);
           
