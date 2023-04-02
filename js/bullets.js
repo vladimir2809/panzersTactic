@@ -6,7 +6,7 @@ Bullets = function () {
         angle:null,
         DMG:null,
     }
-    this.speed = 10;
+    this.speed = 30;
     this.bulletArr = [];
     this.drawBullets=function(context)
     {

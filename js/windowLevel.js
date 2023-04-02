@@ -92,7 +92,6 @@
             this.close();
             levelGame=this.levelSelect-1
             loadGameMap(levelGame);
-            
         }
     }
 

@@ -13,10 +13,13 @@ var oldMouseX = null;
 var oldMouseY = null;
 var flagOldMouse = false;
 var imageArr = new Map();
-var nameImageArr=["body13","body12","body11","body21","body22","body23",'tower3','tower2','tower1',
-                  'wall','water','AIM','arrow','arrowBack','video','lock','Explosion'];
+var nameImageArr=["body13","body12","body11","body21","body22","body23",'tower13','tower12','tower11',
+                   'tower13','tower12','tower11','tower23','tower22','tower21',
+                   'wall','water','AIM','arrow','arrowBack','video','lock','settings','Explosion',
+                  'speakerOff',"speakerOn"];
 var imageLoad = false;
 var countLoadImage = 0;
+var soundOn = true;
 var panzerArr = [];
 var blockageArr = [];
 var speedMoveCamera = { x: 0, y: 0 };// скорость перемешения камеры
@@ -38,11 +41,15 @@ var listBackStep = [];
 var backStepOne = [];
 var gameLevel = 1;
 var panzerMoveFlag = false;// выбранный танк в этом ходу двигался
+var numPanzerDead = null;
 var quantityPanzInCommand = [0, 0];
 var levelGameOpen = [1,]// список открытых уровней
 var levelGame = 0;// текуший уровень игры
 var line = { x:null, y:null, x1:null, y1:null, numP:null };// линия для вычесления пересечений
 var audio = null;
+var burst;
+/* https://opengameart.org/ 
+ <a href="https://www.flaticon.com/free-icons/settings" title="settings icons">Settings icons created by Freepik - Flaticon</a>*/
 var map = {
     x:1,
     y:1,
@@ -75,8 +82,8 @@ function Panzer(command,type,xMap,yMap)
     this.mixTowerY = panzerOption[type].mixTowerY;
     this.mixTowerPosX = panzerOption[type].mixTowerPosX;
     this.mixTowerPosY = panzerOption[type].mixTowerPosY;
-    this.centrX = null;// серидина танка
-    this.centrY = null;
+    this.centrX = this.x + this.width / 2;// серидина танка
+    this.centrY = this.y + this.height / 2;
     this.maxHP = panzerOption[type].maxHP;
     this.HP = this.maxHP;
     this.speed = panzerOption[type].speed;
@@ -98,6 +105,8 @@ function Panzer(command,type,xMap,yMap)
     {
         let str=this.bodyNameImage;
         this.bodyNameImage=str.replace('body1','body2');;
+        //str=this.towerNameImage;
+        //this.towerNameImage=str.replace('tower1','tower2');;
     }
     this.updateState=function()// обновить состояние танка, пересчитывается центральная точка
     {
@@ -248,8 +257,8 @@ function Interface()// класс интерфейса внизу экрана
     this.arrowGo = {
         x: 650,
         y: 27+5,
-        width: 40,
-        height: 40,
+        width: 60,
+        height: 30,
         nameImage: 'arrow',
     };
     this.arrowBack = {
@@ -260,12 +269,27 @@ function Interface()// класс интерфейса внизу экрана
         nameImage: 'arrowBack',
     };
     this.videoButton = {
-        x: 355,
+        x: 205,
         y: 22+5,
         width: 60,
         height: 40,
         nameImage: 'video',
     };
+    this.buttonSettings = {
+        x:380,
+        y:20+5,
+        width:60,
+        height:60,
+        nameImage:'settings',
+
+    }
+    this.buttonSpeaker = {
+        x:510,
+        y:10+5,
+        width:60,
+        height:60,
+        nameImageArr:['speakerOn','speakerOff'],
+    }
     this.drawArrowGo = function () // нарисовать стрелку вперед
     {
         drawSprite(context,imageArr.get(this.arrowGo.nameImage),
@@ -281,6 +305,16 @@ function Interface()// класс интерфейса внизу экрана
         drawSprite(context,imageArr.get(this.videoButton.nameImage),
                             this.x+this.videoButton.x,this.y+this.videoButton.y,camera,1)
     };
+    this.drawSettings=function()
+    {
+         drawSprite(context,imageArr.get(this.buttonSettings.nameImage),
+                            this.x+this.buttonSettings.x,this.y+this.buttonSettings.y,camera,1)
+    }
+    this.drawSpeaker=function(numImage)    
+    {
+         drawSprite(context,imageArr.get(this.buttonSpeaker.nameImageArr[numImage]),
+                            this.x+this.buttonSpeaker.x,this.y+this.buttonSpeaker.y,camera,1)
+    }
     this.drawCountBackStep=function()
     {
         context.beginPath();
@@ -304,6 +338,8 @@ function Interface()// класс интерфейса внизу экрана
         this.drawArrowBack();
         this.drawCountBackStep();
         this.drawVideoButton();
+        this.drawSettings();
+        this.drawSpeaker(soundOn == true ? 0 : 1);
         context.beginPath();
         context.font = "24px serif";
         context.fillStyle = 'white';
@@ -337,6 +373,22 @@ function Interface()// класс интерфейса внизу экрана
             mouseIn = 'videoButton';
             //nextStepCommand();
         }
+        else if (mouseX > this.x + this.buttonSettings.x && 
+            mouseX < this.x + this.buttonSettings.x +this.buttonSettings.width &&
+            mouseY > this.y + this.buttonSettings.y && 
+            mouseY < this.y + this.buttonSettings.y +this.buttonSettings.height)
+        {
+            mouseIn = 'buttonSettings';
+            //nextStepCommand();
+        }
+        else if (mouseX > this.x + this.buttonSpeaker.x && 
+            mouseX < this.x + this.buttonSpeaker.x +this.buttonSpeaker.width &&
+            mouseY > this.y + this.buttonSpeaker.y && 
+            mouseY < this.y + this.buttonSpeaker.y +this.buttonSpeaker.height)
+        {
+            mouseIn = 'buttonSpeaker';
+            //nextStepCommand();
+        }
         else 
         {
             mouseIn = 'none';
@@ -361,10 +413,18 @@ function Interface()// класс интерфейса внизу экрана
                 }
                 nextStepCommand();
             }
-            if (mouseIn == 'videoButton') { };
+            if (mouseIn == 'videoButton') { }
+            if (mouseIn == 'buttonSettings') 
+            {
+                settings.start();
+            }
+            if (mouseIn == 'buttonSpeaker')
+            {
+                soundOn = !soundOn;
+            }
             if (mouseIn == 'arrowGo' || mouseIn == 'arrowBack')
             {
-                audio.play('click');
+               if (soundOn==true) audio.play('click');
             }
             resetMouseLeft();
             console.log('listBackStep');
@@ -377,6 +437,11 @@ function Interface()// класс интерфейса внизу экрана
             if (mouseIn == 'arrowBack')this.textLabel='Отменить ход';
             if (mouseIn == 'arrowGo') this.textLabel='Передать ход';
             if (mouseIn == 'videoButton') this.textLabel='Смотреть видео за 3 отмены ходов';
+            if (mouseIn == 'buttonSettings') this.textLabel='Настройки';
+            if (mouseIn == 'buttonSpeaker')
+            {
+                this.textLabel=soundOn==true?'Выключить звук':'Включить звук';
+            }
             if (mouseIn == 'none') this.textLabel='';
         }
 
@@ -591,7 +656,7 @@ function preload()
         volume: 0.4,
         sprite:{
             shot: [6566,1603],
-            burstPanzer: [1,4000], 
+            burstPanzer: [1,700], 
             click: [9678,265], 
             // soundTrack:[10*1000,4*60*1000,true]
         },
@@ -659,6 +724,8 @@ function create()
     bigText = new BigText();
     burst = new Burst();
     burst.init();
+    settings = new Settings();
+    settings.init();
     //map2[1][1] = 'N';
     //console.log(map2);
    
@@ -671,7 +738,9 @@ function create()
    // panzerArr.push(panzer);
 }
 function drawAll()// нарисовать все
-{
+{ 
+    context.fillStyle='rgb(210,210,210)';
+    context.fillRect(0,0,camera.width,camera.height+interface.height);// очистка экрана
     if (mainMenu.being==true)
     {
         mainMenu.draw();
@@ -683,8 +752,7 @@ function drawAll()// нарисовать все
         return;
 
     }
-    context.fillStyle='rgb(210,210,210)';
-    context.fillRect(0,0,camera.width,camera.height);// очистка экрана
+   
     drawWaveRoute(context);
     interface.draw();
     for (let i = 0; i < blockageArr.length;i++)
@@ -757,6 +825,7 @@ function drawAll()// нарисовать все
     }
     bigText.draw();
     burst.draw();
+    settings.draw();
    
 }
 function drawVisibleAttackLine(context)
@@ -1202,7 +1271,7 @@ function update()// основной цикл игры
             {
                 bullets.shot(panzerArr[numPanz].centrX, panzerArr[numPanz].centrY,
                             panzerArr[numPanz].angleTower,panzerArr[numPanz].DMG );
-                audio.play("shot");
+                if (soundOn==true) audio.play("shot");
                 panzerArr[numPanz].attack = false;
                 panzerArr[numPanz].attackThrow = true;
                 panzerArr[numPanz].tookAim = false;
@@ -1217,6 +1286,26 @@ function update()// основной цикл игры
         autoGame = !autoGame;
         if (autoGame==true) calcStepII(numCommandStep);
     }
+    burst.end(function () {
+        if (numPanzerDead!=null)
+        {
+            panzerArr[numPanzerDead].being = false;
+            numPanzerDead = null;
+            //burst.start(panzerArr[j].centrX, panzerArr[j].centrY);
+            updateMapSearchRoute();
+            calcQuantityPanz();
+           // audio.play("burstPanzer");
+            if (quantityPanzInCommand[0]==0)
+            {
+                bigText.init('Вы проиграли!', 'red', 500, 2);
+            }
+            if (quantityPanzInCommand[1]==0)
+            {
+                bigText.init('Уровень пройден!', 'green', 500, 1);
+            }
+            nextStepCommand();
+        }
+    });
     bullets.update();
     collisioinBulets();
     interface.update();
@@ -1324,21 +1413,24 @@ function collisioinBulets()// столкновение пуль с обьект�
                     }
                     if (panzerArr[j].HP<=0)
                     {
-                        panzerArr[j].being = false;
-                        updateMapSearchRoute();
-                        calcQuantityPanz();
-                        audio.play("burstPanzer");
-                        if (quantityPanzInCommand[0]==0)
-                        {
-                            bigText.init('Вы проиграли!', 'red', 500, 2);
-                        }
-                        if (quantityPanzInCommand[1]==0)
-                        {
-                            bigText.init('Уровень пройден!', 'green', 500, 1);
-                        }
+                        //panzerArr[j].being = false;
+                        burst.start(panzerArr[j].centrX, panzerArr[j].centrY);
+                        numPanzerDead = j;
+                        if (soundOn==true)  audio.play("burstPanzer");
+                        //updateMapSearchRoute();
+                        //calcQuantityPanz();
+                        
+                        //if (quantityPanzInCommand[0]==0)
+                        //{
+                        //    bigText.init('Вы проиграли!', 'red', 500, 2);
+                        //}
+                        //if (quantityPanzInCommand[1]==0)
+                        //{
+                        //    bigText.init('Уровень пройден!', 'green', 500, 1);
+                        //}
                         
                     }
-                    updateImUnderGunPanzer();
+                    else
                    // if (stepCommand[numCommandStep].attack==true && stepCommand[numCommandStep].complete==3)
                     {
                         //if (numCommandStep==1 /*&& autogame==false*/) 
@@ -1346,6 +1438,7 @@ function collisioinBulets()// столкновение пуль с обьект�
                         nextStepCommand();
                       
                     }
+                    updateImUnderGunPanzer();
                     //calcStepII(1);
                 //    alert(589);
           
