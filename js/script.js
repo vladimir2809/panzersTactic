@@ -427,7 +427,7 @@ function Interface()// класс интерфейса внизу экрана
             {
                if (soundOn==true) audio.play('click');
             }
-            resetMouseLeft();
+           // resetMouseLeft();
             console.log('listBackStep');
             console.log(listBackStep);
             console.log('Arr');

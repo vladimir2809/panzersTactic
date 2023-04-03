@@ -36,7 +36,7 @@
         this.being = true;
         this.timerId=setInterval(function(){
            settings.update(); 
-        },20);
+        },30);
     }
     this.close=function()
     {
@@ -75,9 +75,10 @@
     {
         this.volume.slider.update();
         if (mouseLeftClick()==true)
-        {
-            if (checkInObj(this.buttonExit,mouseX,mouseY))
+        { 
+            if (checkInObj(this.buttonExit,mouseX,mouseY)==true)
             {
+               
                 this.close();
             }
         }
