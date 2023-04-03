@@ -7,7 +7,7 @@
     this.widthOneItem = 380;
     this.heightOneItem = 80;
     this.dist = 15;
-    this.listSelectMain = ['Играть', 'Настройки'/*, 'Помошь'*/, 'Выход'];
+    this.listSelectMain = ['Играть', 'Авторы'/*, 'Помошь'*/, 'Выход'];
     this.listSelectNewGame = ['Да', 'Нет'];
     this.selectHower = null;
     this.start=function()
