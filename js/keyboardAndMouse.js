@@ -66,8 +66,12 @@ function initKeyboardAndMouse(keyArr)// инициализировать пер�
         {
             mouseLeftPress=false;
             mouseClick=true;
+            //setTimeout(function () {
+            //    if (mouseClick == true) mouseClick = false;
+            //}, 100);
         } 
     });
+
     if (canvas.addEventListener) // событие врашеник колесиком
     {
         if ('onwheel' in document) 

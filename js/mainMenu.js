@@ -14,6 +14,10 @@
     {
         //if (this.being==true)
         this.being = true;
+        if (checkDataStorage()==true)
+        {
+            this.listSelectMain[0] = 'Продолжить';
+        }
         this.y=200;
         this.x = screenWidth/2-this.widthOneItem/2;
         this.timerId=setInterval(function(){
@@ -88,6 +92,7 @@
         let mY = mouseY;//-mouseOffsetY;
         let x = this.x;
         let y = this.y;
+        this.selectHower = null;
         for (let i = 0;i<this.listSelectMain.length;i++)
         {
             if ( mX>x && mX<x+this.widthOneItem &&

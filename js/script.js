@@ -32,6 +32,8 @@ var bullets = null;
 var numSelectPanzer = null;// номер выбраного танка
 var numCommandStep = 0;
 var autoGame = false;
+var speedMotionPanz = 10;
+var autoStepEnd = false;
 var movePanzerGreen = false;// танк двигался в этом ходу
 var quantityBackStep = 15;
 var dataII = null;
@@ -47,6 +49,7 @@ var levelGameOpen = [1,]// список открытых уровней
 var levelGame = 0;// текуший уровень игры
 var line = { x:null, y:null, x1:null, y1:null, numP:null };// линия для вычесления пересечений
 var audio = null;
+var volumeSound = 0.5;
 var burst;
 /* https://opengameart.org/ 
  <a href="https://www.flaticon.com/free-icons/settings" title="settings icons">Settings icons created by Freepik - Flaticon</a>*/
@@ -165,7 +168,7 @@ function Panzer(command,type,xMap,yMap)
         if (this.moving==true)
         {
             
-            for (let i = 0; i < 10; i++)
+            for (let i = 0; i < speedMotionPanz; i++)
             {
                 let numP = this.numPointRoute;
                 if (this.xMap<this.route[numP].xMap && this.yMap==this.route[numP].yMap)
@@ -426,7 +429,7 @@ function Interface()// класс интерфейса внизу экрана
             {
                if (soundOn==true) audio.play('click');
             }
-            resetMouseLeft();
+           // resetMouseLeft();
             console.log('listBackStep');
             console.log(listBackStep);
             console.log('Arr');
@@ -496,10 +499,11 @@ function BigText()// класс большой текст
                         if (checkElemArr(levelGameOpen,levelGame + 2)==false)
                         {
                             levelGameOpen.push(levelGame + 2);
+                            
                         }
                         windowLevel.start();
                         autoGame = false;
-                        
+                        saveDataStoroge();
                     }
                     break;
                     case 2:// вы проиграли
@@ -589,7 +593,8 @@ window.addEventListener('load', function () {
 
     //setInterval(drawAll, 6);
     setInterval(function()  {
-        if (mainMenu.being==false && windowLevel.being==false) // если не открыты мени и окно выбора уровней
+        if (mainMenu.being==false && windowLevel.being==false &&
+            settings.being==false) // если не открыты мени и окно выбора уровней
         {
             update();// основной цикл игры
         }
@@ -653,7 +658,7 @@ function preload()
     loadImageArr();
     audio = new Howl({
         src: ['sound/sound.mp3'],
-        volume: 0.4,
+        volume: 0.5 ,
         sprite:{
             shot: [6566,1603],
             burstPanzer: [1,700], 
@@ -703,6 +708,50 @@ function createRandomMap(quantityBlockage,quantityPanzer) // сгенирова�
     }
  //   updateMapSearchRoute();
 }
+function saveDataStoroge()
+{
+    localStorage.setItem('dataPanzersTactic',JSON.stringify({levelGameOpen:levelGameOpen,
+                            volumeSound:volumeSound,speedMotionPanz:speedMotionPanz,
+                            autoStepEnd:autoStepEnd}));
+}
+function readDataStoroge()
+{
+    let data=localStorage.getItem('dataPanzersTactic');
+    data = JSON.parse(data);
+    console.log(data);
+    if (Array.isArray(data.levelGameOpen)==true)
+    {
+        levelGameOpen = data.levelGameOpen;
+    }
+    if (typeof(data.volumeSound)=='number')
+    {
+        volumeSound = data.volumeSound;
+    }
+    if (typeof(data.speedMotionPanz)=='number')
+    {
+        speedMotionPanz = data.speedMotionPanz;
+    }
+    if (typeof(data.autoStepEnd)=='boolean')
+    {
+        autoStepEnd = data.autoStepEnd;
+    }
+}
+function checkDataStorage()
+{
+    if (localStorage.getItem('dataPanzersTactic')==null ||
+        localStorage.getItem('dataPanzersTactic')==undefined)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+function removeDataLevel()
+{
+    localStorage.removeItem('dataPanzersTactic');
+}
 function create() 
 {
     canvas = document.getElementById("canvas");
@@ -713,6 +762,10 @@ function create()
     srand(1415);
 
    // loadGameMap(0);
+    if (checkDataStorage()==true)
+    {
+        readDataStoroge();
+    }
     mainMenu = new MainMenu();
     mainMenu.start();
     windowLevel = new WindowLevel();
@@ -1231,6 +1284,11 @@ function update()// основной цикл игры
                     addListBackStep();
                     panzerMoveFlag = true;
                 }
+                if (visiblePanzForAttack(i/*numSelectPanzer*/)==false && autoStepEnd==true && 
+                    numCommandStep == 0 && autoGame==false)
+                {
+                    nextStepCommand();
+                }
                 if (stepCommand[numCommandStep]!=null && stepCommand[numCommandStep].complete==1)
                 {
                     stepCommand[numCommandStep].complete = 2; 
@@ -1380,6 +1438,23 @@ function updateImUnderGunPanzer(forII=false,numP=null,command=1)
            
     }
 }
+function visiblePanzForAttack(numPanz)
+{
+    
+    for (let i = 0; i < panzerArr.length;i++)
+    {
+        if (panzerArr[numPanz].command!=panzerArr[i].command && panzerArr[i].being==true)
+        {
+            if (visiblePanzerToPanzer(numPanz,i)==true)
+            {
+                return true;
+            }
+        }
+    }
+    
+    return false;
+
+}
 function collisioinBulets()// столкновение пуль с обьектами игры
 {      
     for (let i = 0; i < bullets.bulletArr.length;i++)
@@ -1460,6 +1535,7 @@ function calcQuantityPanz()
     }
 
 }
+
 function calcStepII(numCommand,numPanzStep=null,numPanzForAttack=null)
 {
     let attackObj = function () {
