@@ -88,6 +88,7 @@
         let mY = mouseY;//-mouseOffsetY;
         let x = this.x;
         let y = this.y;
+        this.selectHower = null;
         for (let i = 0;i<this.listSelectMain.length;i++)
         {
             if ( mX>x && mX<x+this.widthOneItem &&

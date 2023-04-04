@@ -12,6 +12,11 @@
         x:20,
         y:100,
     };
+    this.speedMotion = {
+        slider:null,
+        x:20,
+        y:200,
+    }
     this.buttonExit = { 
         width:40,
         height:40,
@@ -23,13 +28,16 @@
        
 
     }
-    
+    this.toggle = null;
     this.init=function()
     {
         this.buttonExit.x = settings.x + settings.width - this. buttonExit.width;
         this.buttonExit.y = settings.y ;
         this.volume.slider = new Slider(this.SledersX,this.y+this.volume.y-20,150,volumeSound,0,1);
         this.volume.slider.init();
+        this.speedMotion.slider = new Slider(this.SledersX,this.y+this.speedMotion.y-20,150,speedMotionPanz,1,30);
+        this.speedMotion.slider.init();
+        this.toggle = new Toggle(this.SledersX+88, this.y + 275,autoStepEnd);
     }
     this.start=function()
     {
@@ -69,22 +77,32 @@
             context.fillText("Скорость движения",this.x+20,this.y+200);
             context.fillText("Автозавершение хода",this.x+20,this.y+300);
             this.volume.slider.draw();
+            this.speedMotion.slider.draw();
+            this.toggle.draw();
         }
     }
     this.update=function ()
-    {
-        this.volume.slider.update();
-        if (mouseLeftClick()==true)
+    {   
+        let mouseCLick = mouseLeftClick();
+        if (mouseCLick==true)
         { 
             if (checkInObj(this.buttonExit,mouseX,mouseY)==true)
             {
                
                 this.close();
-            }
+            } 
+            this.toggle.update(mouseCLick);
+            autoStepEnd = this.toggle.valueOn;
+            console.log("ASE "+autoStepEnd);
         }
+        this.speedMotion.slider.update();
+        speedMotionPanz = this.speedMotion.slider.value;
+        this.volume.slider.update();
+       
+        
         volumeSound = this.volume.slider.value;
         audio.volume(volumeSound);
-        console.log(volumeSound);
+        console.log(speedMotionPanz);
         this.volume.slider.clickBar(function () {
             audio.play('shot');
         });
@@ -170,7 +188,7 @@ function Slider(x,y,width,value,min,max)
                     this.bar.x = this.x;
                     this.grabMouseBar = false;
                 }
-                this.value = (this.max - this.min) * (this.bar.x - this.x) / this.width;
+                this.value = this.min+(this.max - this.min) * (this.bar.x - this.x) / this.width;
             }
             console.log(this.value);
             //if (this.countMousePress==null)
@@ -199,4 +217,65 @@ function Slider(x,y,width,value,min,max)
         }
         this.oldX = mouseX;
     }
+}
+function Toggle(x,y,valueOn)
+{
+    this.being = true;
+    this.x = x;
+    this.y = y;
+    this.width = 60;
+    this.height = 30;
+    this.depthRect = 4;
+    this.valueOn = valueOn;
+    this.bar = {
+        x:null,
+        y:null,
+        width:null,
+        height:null,
+        depth: 4,
+    };
+    this.bar.x = x + this.depthRect;
+    this.bar.y = y + this.depthRect;
+    this.bar.width = this.height - this.depthRect*2;
+    this.bar.height = this.height - this.depthRect*2;
+    this.draw=function()
+    {
+        context.save();
+        context.strokeStyle = 'rgb(128,128,128)';
+        context.lineWidth = this.depthRect;
+        context.strokeRect(this.x,this.y,this.width,this.height);
+        context.restore();
+
+        context.save();
+        context.fillStyle = this.valueOn==true?'rgb(128,128,255)':'rgb(128,128,128)';
+        context.fillRect(this.bar.x,this.bar.y,this.bar.width,this.bar.height);
+
+        context.strokeStyle = 'white';
+        context.lineWidth = this.bar.depth;
+        context.strokeRect(this.bar.x,this.bar.y,this.bar.width,this.bar.height);
+        context.restore();
+    }
+    this.update=function(clickMouse)
+    {
+        if (clickMouse==true)
+        {
+            if (checkInObj(this,mouseX,mouseY))
+            {
+                this.valueOn = !this.valueOn;
+            }
+            
+        }
+        if (this.valueOn==true)
+        {
+            this.bar.x = this.x + this.width-this.depthRect-this.bar.width;
+
+        }
+        else
+        {
+            this.bar.x=this.x + this.depthRect;
+
+        }
+    }
+
+
 }

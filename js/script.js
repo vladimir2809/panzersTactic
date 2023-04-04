@@ -32,6 +32,8 @@ var bullets = null;
 var numSelectPanzer = null;// номер выбраного танка
 var numCommandStep = 0;
 var autoGame = false;
+var speedMotionPanz = 10;
+var autoStepEnd = false;
 var movePanzerGreen = false;// танк двигался в этом ходу
 var quantityBackStep = 15;
 var dataII = null;
@@ -166,7 +168,7 @@ function Panzer(command,type,xMap,yMap)
         if (this.moving==true)
         {
             
-            for (let i = 0; i < 10; i++)
+            for (let i = 0; i < speedMotionPanz; i++)
             {
                 let numP = this.numPointRoute;
                 if (this.xMap<this.route[numP].xMap && this.yMap==this.route[numP].yMap)
@@ -590,7 +592,8 @@ window.addEventListener('load', function () {
 
     //setInterval(drawAll, 6);
     setInterval(function()  {
-        if (mainMenu.being==false && windowLevel.being==false) // если не открыты мени и окно выбора уровней
+        if (mainMenu.being==false && windowLevel.being==false &&
+            settings.being==false) // если не открыты мени и окно выбора уровней
         {
             update();// основной цикл игры
         }
@@ -1232,6 +1235,11 @@ function update()// основной цикл игры
                     addListBackStep();
                     panzerMoveFlag = true;
                 }
+                if (visiblePanzForAttack(i/*numSelectPanzer*/)==false && autoStepEnd==true && 
+                    numCommandStep == 0 && autoGame==false)
+                {
+                    nextStepCommand();
+                }
                 if (stepCommand[numCommandStep]!=null && stepCommand[numCommandStep].complete==1)
                 {
                     stepCommand[numCommandStep].complete = 2; 
@@ -1381,6 +1389,23 @@ function updateImUnderGunPanzer(forII=false,numP=null,command=1)
            
     }
 }
+function visiblePanzForAttack(numPanz)
+{
+    
+    for (let i = 0; i < panzerArr.length;i++)
+    {
+        if (panzerArr[numPanz].command!=panzerArr[i].command && panzerArr[i].being==true)
+        {
+            if (visiblePanzerToPanzer(numPanz,i)==true)
+            {
+                return true;
+            }
+        }
+    }
+    
+    return false;
+
+}
 function collisioinBulets()// столкновение пуль с обьектами игры
 {      
     for (let i = 0; i < bullets.bulletArr.length;i++)
@@ -1461,6 +1486,7 @@ function calcQuantityPanz()
     }
 
 }
+
 function calcStepII(numCommand,numPanzStep=null,numPanzForAttack=null)
 {
     let attackObj = function () {

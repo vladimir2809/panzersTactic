@@ -66,9 +66,9 @@ function initKeyboardAndMouse(keyArr)// инициализировать пер�
         {
             mouseLeftPress=false;
             mouseClick=true;
-            setTimeout(function () {
-                if (mouseClick == true) mouseClick = false;
-            }, 100);
+            //setTimeout(function () {
+            //    if (mouseClick == true) mouseClick = false;
+            //}, 100);
         } 
     });
 
@@ -127,7 +127,7 @@ function resetMouseLeft()
 function mouseLeftClick()// функция определения клика. после 1 вызова второй будет false
 {
     var result=mouseClick;
-   // mouseClick=false;
+    mouseClick=false;
     return result;
 }
 function addInKeyArr(key)// добавить кнопку которую нужно отслеживать для нажатия
