@@ -503,7 +503,8 @@ function BigText()// класс большой текст
                         }
                         windowLevel.start();
                         autoGame = false;
-                        saveDataStoroge();
+                        saveDataStorage();
+                        
                     }
                     break;
                     case 2:// вы проиграли
@@ -708,13 +709,13 @@ function createRandomMap(quantityBlockage,quantityPanzer) // сгенирова�
     }
  //   updateMapSearchRoute();
 }
-function saveDataStoroge()
+function saveDataStorage()
 {
     localStorage.setItem('dataPanzersTactic',JSON.stringify({levelGameOpen:levelGameOpen,
                             volumeSound:volumeSound,speedMotionPanz:speedMotionPanz,
                             autoStepEnd:autoStepEnd}));
 }
-function readDataStoroge()
+function readDataStorage()
 {
     let data=localStorage.getItem('dataPanzersTactic');
     data = JSON.parse(data);
@@ -726,6 +727,7 @@ function readDataStoroge()
     if (typeof(data.volumeSound)=='number')
     {
         volumeSound = data.volumeSound;
+        audio.volume(volumeSound);
     }
     if (typeof(data.speedMotionPanz)=='number')
     {
@@ -748,7 +750,7 @@ function checkDataStorage()
         return true;
     }
 }
-function removeDataLevel()
+function removeDataStorage()
 {
     localStorage.removeItem('dataPanzersTactic');
 }
@@ -764,7 +766,7 @@ function create()
    // loadGameMap(0);
     if (checkDataStorage()==true)
     {
-        readDataStoroge();
+        readDataStorage();
     }
     mainMenu = new MainMenu();
     mainMenu.start();
@@ -1126,7 +1128,7 @@ function update()// основной цикл игры
              
                 // если кликнули на не выбранный танк
                 if (checkInObj(panzerArr[i],mouseX,mouseY)==true && panzerArr[i].command==0 &&
-                    movePanzerGreen==false)
+                    movePanzerGreen==false && flagOldMouse==false)
                 {
                     if (numSelectPanzer==null)  saveStepData(panzerArr);
                     updateMapSearchRoute();
@@ -1284,7 +1286,7 @@ function update()// основной цикл игры
                     addListBackStep();
                     panzerMoveFlag = true;
                 }
-                if (visiblePanzForAttack(i/*numSelectPanzer*/)==false && autoStepEnd==true && 
+                if (visiblePanzForAttack(numSelectPanzer)==false && autoStepEnd==true && 
                     numCommandStep == 0 && autoGame==false)
                 {
                     nextStepCommand();
@@ -1355,11 +1357,12 @@ function update()// основной цикл игры
            // audio.play("burstPanzer");
             if (quantityPanzInCommand[0]==0)
             {
-                bigText.init('Вы проиграли!', 'red', 500, 2);
+                bigText.init('Вы проиграли!', 'red', 200, 2);
             }
             if (quantityPanzInCommand[1]==0)
             {
-                bigText.init('Уровень пройден!', 'green', 500, 1);
+                bigText.init('Уровень пройден!', 'green', 200, 1);
+                //saveDataStorage();
             }
             nextStepCommand();
         }
@@ -1553,22 +1556,25 @@ function calcStepII(numCommand,numPanzStep=null,numPanzForAttack=null)
     //    }
     //} 
     var step = {numPanz:null,numPanzAttack:null,attack:true,pointAttack:{xMap:null,yMap:null,dist:null},complete:0};
-    var numPanzMinHP = null;
-    var minHP = 1000;
+    var numPanzValueAtt = null;
+    var maxValueAtt = 0;
     var ExceptionNumPanz = [];
     let flagVisible = false;
 
-    function calcNumPanzMinHP()
+    function calcNumPanzValueAtt()
     {
-        minHP = 1000;
+        maxValueAtt = 0;
         for (let i = 0; i < panzerArr.length;i++)
+        if (panzerArr[i].being==true)
         {
-            if (panzerArr[i].HP<=minHP && checkElemArr(ExceptionNumPanz,i)==false &&
+            let valueAtt = panzerArr[i].HP > 0 ? panzerArr[i].maxHP / panzerArr[i].HP * panzerArr[i].DMG : 0;
+            if (valueAtt>=maxValueAtt && checkElemArr(ExceptionNumPanz,i)==false &&
                 panzerArr[i].command!=numCommandStep)
             {
-                numPanzMinHP = i;
-                minHP = panzerArr[i].HP;
+                numPanzValueAtt = i;
+                maxValueAtt = valueAtt;
             }
+            console.log('panz['+i+'].valueAtt='+valueAtt);
         }
     }
     function calcAttackArr(distWave=null) 
@@ -1710,8 +1716,9 @@ function calcStepII(numCommand,numPanzStep=null,numPanzForAttack=null)
                 do
                 {
                     flag = false;
-                    calcNumPanzMinHP();
+                    calcNumPanzValueAtt();
                     let minDist = 100;
+                    var maxDMG = 0;
                     for (let i = 0; i < attackArr.length; i++) 
                     {
 
@@ -1723,12 +1730,14 @@ function calcStepII(numCommand,numPanzStep=null,numPanzForAttack=null)
                                // console.log('k');
                                 if (numPanzForAttack==null)
                                 {
-                                    if (point.gunArr[k] == numPanzMinHP) 
+                                    if (point.gunArr[k] == numPanzValueAtt) 
                                     {
                                         // console.log('kkk');
-                                        if (minDist>=point.dist)
+                                        if (minDist>=point.dist &&
+                                            maxDMG<=panzerArr[attackArr[i].numPanz].DMG)
                                         {
                                             minDist = point.dist;
+                                            maxDMG = panzerArr[attackArr[i].numPanz].DMG;
                                             flag = true;
                                             step.numPanz = attackArr[i].numPanz;
                                             step.numPanzAttack = point.gunArr[k];
@@ -1770,9 +1779,9 @@ function calcStepII(numCommand,numPanzStep=null,numPanzForAttack=null)
                     }
                     if (flag == false) 
                     {
-                        ExceptionNumPanz.push(numPanzMinHP);
+                        ExceptionNumPanz.push(numPanzValueAtt);
                     }
-                }while (flag == false && numPanzMinHP != null);
+                }while (flag == false && numPanzValueAtt != null);
             }
             stepCommand[numCommand] = step;
         }
@@ -1857,7 +1866,7 @@ function calcStepII(numCommand,numPanzStep=null,numPanzForAttack=null)
     //}
    
 
-    //let minHP = 100;
+    //let maxValueAtt = 100;
     //let num = 0;
     //let numPAtc = 0;
     //let flag = false;
@@ -1867,9 +1876,9 @@ function calcStepII(numCommand,numPanzStep=null,numPanzForAttack=null)
     //    {
     //        for (let j = 0; j < attackArr[i].underGunArr.length;j++)
     //        {
-    //            if (panzerArr[attackArr[i].underGunArr[j]].HP <= minHP)
+    //            if (panzerArr[attackArr[i].underGunArr[j]].HP <= maxValueAtt)
     //            {
-    //                minHP = panzerArr[attackArr[i].underGunArr[j]].HP;
+    //                maxValueAtt = panzerArr[attackArr[i].underGunArr[j]].HP;
     //                num = i;
     //                numPAtc = j;
     //                flag = true;
@@ -2052,7 +2061,7 @@ function loadGameMap(numMap)
     let data = mapArr[numMap];
     for (let i = 0; i < data.panzer.length;i++)
     {
-        var panzer = new Panzer(data.panzer[i].command,randomInteger(0,2)/*data.panzer[i].type*/, 
+        var panzer = new Panzer(data.panzer[i].command,/*randomInteger(0,2)*/data.panzer[i].type, 
                         data.panzer[i].xMap, data.panzer[i].yMap);
         panzer.being = true;
         panzer.lineArr=calcLineArr(panzer,'panzer',i);

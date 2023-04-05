@@ -35,6 +35,7 @@
         this.buttonExit.y = settings.y ;
         this.volume.slider = new Slider(this.SledersX,this.y+this.volume.y-20,150,volumeSound,0,1);
         this.volume.slider.init();
+        //Slider(x,y,width,value,min,max)
         this.speedMotion.slider = new Slider(this.SledersX,this.y+this.speedMotion.y-20,150,speedMotionPanz,1,30);
         this.speedMotion.slider.init();
         this.toggle = new Toggle(this.SledersX+88, this.y + 275,autoStepEnd);
@@ -88,7 +89,7 @@
         { 
             if (checkInObj(this.buttonExit,mouseX,mouseY)==true)
             {
-               
+                saveDataStorage();
                 this.close();
             } 
             this.toggle.update(mouseCLick);
@@ -132,7 +133,7 @@ function Slider(x,y,width,value,min,max)
     }
     this.updateBar=function()
     {
-        this.bar.x = this.x + this.width * this.value / (this.max - this.min);
+        this.bar.x = this.x + this.width * (this.value -this.min)/ (this.max - this.min);
         this.bar.y = this.y - (this.bar.height - this.height) / 2;
     }
     this.init=function()
@@ -144,7 +145,7 @@ function Slider(x,y,width,value,min,max)
     this.draw=function()
     {
         context.fillStyle = "green";
-        context.fillRect(this.x,this.y,this.width*this.value/(this.max-this.min),this.height);
+        context.fillRect(this.x,this.y,this.width*(this.value-this.min)/(this.max-this.min),this.height);
         context.strokeStyle = "red";
         context.strokeRect(this.x,this.y,this.width,this.height);
         context.fillStyle = "red";
@@ -188,7 +189,7 @@ function Slider(x,y,width,value,min,max)
                     this.bar.x = this.x;
                     this.grabMouseBar = false;
                 }
-                this.value = this.min+(this.max - this.min) * (this.bar.x - this.x) / this.width;
+                this.value = this.min+((this.max - this.min) * (this.bar.x - this.x) / this.width);
             }
             console.log(this.value);
             //if (this.countMousePress==null)
