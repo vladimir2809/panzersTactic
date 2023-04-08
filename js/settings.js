@@ -28,13 +28,27 @@
        
 
     }
+    this.buttonMainMenu = { 
+        width:330,
+        height:40,
+        x:null,
+        y:null,
+       
+        colorText:'rgb(255,255,0)',
+        text: 'Выйти в главное меню',
+       
+
+    }
     this.toggle = null;
     this.init=function()
     {
-        this.buttonExit.x = settings.x + settings.width - this. buttonExit.width;
-        this.buttonExit.y = settings.y ;
+        this.buttonExit.x = this.x + this.width - this. buttonExit.width;
+        this.buttonExit.y = this.y ;
+        this.buttonMainMenu.x = this.x + this.width / 2 - this.buttonMainMenu.width / 2;
+        this.buttonMainMenu.y = this.y + 330; 
         this.volume.slider = new Slider(this.SledersX,this.y+this.volume.y-20,150,volumeSound,0,1);
         this.volume.slider.init();
+        //Slider(x,y,width,value,min,max)
         this.speedMotion.slider = new Slider(this.SledersX,this.y+this.speedMotion.y-20,150,speedMotionPanz,1,30);
         this.speedMotion.slider.init();
         this.toggle = new Toggle(this.SledersX+88, this.y + 275,autoStepEnd);
@@ -71,6 +85,14 @@
             context.fillStyle = this.buttonExit.colorText;
             context.fillText(this.buttonExit.text,this.buttonExit.x+8,this.buttonExit.y+30);
 
+            context.strokeStyle = 'red'//"rgb(128,128,128)";
+            context.strokeRect(this.buttonMainMenu.x,this.buttonMainMenu.y,
+                                this.buttonMainMenu.width,this.buttonMainMenu.height);
+
+            context.font = "32px serif";
+            context.fillStyle = this.buttonMainMenu.colorText;
+            context.fillText(this.buttonMainMenu.text,this.buttonMainMenu.x+8,this.buttonMainMenu.y+30);
+
             context.font = "24x serif";
             context.fillStyle = "white";
             context.fillText('Громкость',this.x+this.volume.x,this.y+this.volume.y);
@@ -88,9 +110,15 @@
         { 
             if (checkInObj(this.buttonExit,mouseX,mouseY)==true)
             {
-               
+                saveDataStorage();
                 this.close();
             } 
+            if (checkInObj(this.buttonMainMenu,mouseX,mouseY)==true)
+            {
+                this.close();
+                autoGame = false;
+                mainMenu.start();
+            }
             this.toggle.update(mouseCLick);
             autoStepEnd = this.toggle.valueOn;
             console.log("ASE "+autoStepEnd);
@@ -132,7 +160,7 @@ function Slider(x,y,width,value,min,max)
     }
     this.updateBar=function()
     {
-        this.bar.x = this.x + this.width * this.value / (this.max - this.min);
+        this.bar.x = this.x + this.width * (this.value -this.min)/ (this.max - this.min);
         this.bar.y = this.y - (this.bar.height - this.height) / 2;
     }
     this.init=function()
@@ -144,7 +172,7 @@ function Slider(x,y,width,value,min,max)
     this.draw=function()
     {
         context.fillStyle = "green";
-        context.fillRect(this.x,this.y,this.width*this.value/(this.max-this.min),this.height);
+        context.fillRect(this.x,this.y,this.width*(this.value-this.min)/(this.max-this.min),this.height);
         context.strokeStyle = "red";
         context.strokeRect(this.x,this.y,this.width,this.height);
         context.fillStyle = "red";
@@ -188,7 +216,7 @@ function Slider(x,y,width,value,min,max)
                     this.bar.x = this.x;
                     this.grabMouseBar = false;
                 }
-                this.value = this.min+(this.max - this.min) * (this.bar.x - this.x) / this.width;
+                this.value = this.min+((this.max - this.min) * (this.bar.x - this.x) / this.width);
             }
             console.log(this.value);
             //if (this.countMousePress==null)
@@ -234,10 +262,24 @@ function Toggle(x,y,valueOn)
         height:null,
         depth: 4,
     };
-    this.bar.x = x + this.depthRect;
-    this.bar.y = y + this.depthRect;
     this.bar.width = this.height - this.depthRect*2;
     this.bar.height = this.height - this.depthRect*2;
+    this.calcBarX=function()
+    {
+        if (this.valueOn==true)
+        {
+            this.bar.x = this.x + this.width-this.depthRect-this.bar.width;
+
+        }
+        else
+        {
+            this.bar.x=this.x + this.depthRect;
+        }
+    }
+    this.calcBarX();
+    //this.bar.x = x + this.depthRect;
+    this.bar.y = y + this.depthRect;
+    
     this.draw=function()
     {
         context.save();
@@ -263,18 +305,9 @@ function Toggle(x,y,valueOn)
             {
                 this.valueOn = !this.valueOn;
             }
-            
+            this.calcBarX();         
         }
-        if (this.valueOn==true)
-        {
-            this.bar.x = this.x + this.width-this.depthRect-this.bar.width;
-
-        }
-        else
-        {
-            this.bar.x=this.x + this.depthRect;
-
-        }
+    
     }
 
 
