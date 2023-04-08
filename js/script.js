@@ -258,6 +258,8 @@ function Interface()// класс интерфейса внизу экрана
     this.width = screenWidth;
     this.height = 2 * mapSize;
     this.textLabel = '';
+    this.powerCommand0 = 0;
+    this.powerCommand1 = 0;
     this.arrowGo = {
         x: 650,
         y: 27+5,
@@ -349,6 +351,31 @@ function Interface()// класс интерфейса внизу экрана
         context.fillStyle = 'white';
         context.fillText(this.textLabel, this.x +5, this.y +20);
         context.stroke();
+
+        context.beginPath();
+        context.font = "22px serif";
+        context.fillStyle = 'green';
+        context.fillText(this.powerCommand0, this.x +300, this.y +50);
+        context.stroke();
+
+        context.beginPath();
+        context.font = "22px serif";
+        context.fillStyle = 'red';
+        context.fillText(this.powerCommand1, this.x +450, this.y +50);
+        context.stroke();
+    }
+    this.calcPower=function()
+    {
+        this.powerCommand0 = 0;
+        this.powerCommand1 = 0;
+        for (let i = 0; i < panzerArr.length;i++)
+        {
+            if (panzerArr[i].being==true)
+            {
+                if (panzerArr[i].command == 0) this.powerCommand0 += panzerArr[i].HP * panzerArr[i].DMG;
+                if (panzerArr[i].command == 1) this.powerCommand1 += panzerArr[i].HP * panzerArr[i].DMG;
+            }
+        }
     }
     this.update=function()
     {
@@ -448,6 +475,7 @@ function Interface()// класс интерфейса внизу экрана
             }
             if (mouseIn == 'none') this.textLabel='';
         }
+        this.calcPower();
 
     }
 
