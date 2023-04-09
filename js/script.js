@@ -548,9 +548,17 @@ function BigText()// класс большой текст
     }
     
 }
-function calcLineArr(obj,type="blockage",numP=null)// расчитать массив линий для обьекта
+function calcLineArr(objOrigin,type="blockage",numP=null)// расчитать массив линий для обьекта
 {
    let lineArr=[];
+   let obj=JSON.parse(JSON.stringify(objOrigin))
+   if (type=='panzer')
+   {
+       obj.x = Math.trunc(obj.x / mapSize) * mapSize;
+       obj.y = Math.trunc(obj.y / mapSize) * mapSize;
+       obj.width=mapSize;
+       obj.height=mapSize;
+   }
    for (let j=0;j<4;j++)
     {
         lineArr[j]=JSON.parse(JSON.stringify(line));//clone(line);
@@ -705,6 +713,8 @@ function preload()
 }
 function createRandomMap(quantityBlockage,quantityPanzer) // сгенировать случайную карту
 {
+    while (blockageArr.length > 0) blockageArr.splice(0,1);
+    while (panzerArr.length > 0) panzerArr.splice(0,1);
     for (let i = 0; i < quantityPanzer;i++)// создать танки
     {
         let xMap = null;
@@ -731,7 +741,7 @@ function createRandomMap(quantityBlockage,quantityPanzer) // сгенирова�
             xMap = randomInteger(0, (map.width / mapSize) - 1);
             yMap = randomInteger(0, (map.height / mapSize) - 1);
         } while (checkObjInCell(xMap, yMap) == true);
-        var blockage = new Blockage(randomInteger(0,0),xMap,yMap)
+        var blockage = new Blockage(Math.trunc(randomInteger(0,10)/8),xMap,yMap)
         // panzer.draw(context,camera,1);
         blockage.lineArr=calcLineArr(blockage);
         blockageArr.push(blockage);
@@ -788,7 +798,7 @@ function create()
     canvas = document.getElementById("canvas");
     context = canvas.getContext("2d");
     initKeyboardAndMouse(["Digit1", "Digit2","Digit3", "Digit4","Digit5", "Digit6", "KeyW",'KeyA',
-                            "Delete",'KeyD','F2','KeyP','KeyL']);
+                            "Delete",'KeyD','F2','KeyP','KeyL',,'KeyR']);
     updateSize();
     srand(1415);
 
@@ -2006,6 +2016,10 @@ function redactGameMap()// редактировать карту
             }
            
         }
+    }
+    if (keyUpDuration('KeyR',1000)==true)
+    {
+        createRandomMap(115,0 );
     }
     if (checkPressKey('KeyW')==true || checkPressKey('KeyA')==true ||
         checkPressKey('Digit1')==true || checkPressKey('Digit2')==true||
