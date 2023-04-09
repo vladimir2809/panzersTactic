@@ -260,42 +260,49 @@ function Interface()// класс интерфейса внизу экрана
     this.textLabel = '';
     this.powerCommand0 = 0;
     this.powerCommand1 = 0;
-    this.arrowGo = {
-        x: 650,
-        y: 27+5,
-        width: 60,
-        height: 30,
-        nameImage: 'arrow',
-    };
-    this.arrowBack = {
-        x: 60,
-        y: 22+5,
-        width: 60,
-        height: 45,
-        nameImage: 'arrowBack',
-    };
-    this.videoButton = {
-        x: 205,
-        y: 22+5,
-        width: 60,
-        height: 40,
-        nameImage: 'video',
-    };
-    this.buttonSettings = {
-        x:380,
-        y:20+5,
-        width:60,
-        height:60,
-        nameImage:'settings',
+    this.objArr=[
+         {
+            name: 'arrowGo',
+            x: 550,//650
+            y: 27+5,
+            width: 60,
+            height: 30,
+            nameImage: 'arrow',
+        },
+        //{
+        //    name:'arrowBack',
+        //    x: 60,
+        //    y: 22+5,
+        //    width: 60,
+        //    height: 45,
+        //    nameImage: 'arrowBack',
+        //},
+        //{
+        //    name:'videoButton',
+        //    x: 205,
+        //    y: 22+5,
+        //    width: 60,
+        //    height: 40,
+        //    nameImage: 'video',
+        //},
+        {
+            name: 'buttonSettings',
+            x:380,
+            y:20+5,
+            width:60,
+            height:60,
+            nameImage:'settings',
 
-    }
-    this.buttonSpeaker = {
-        x:510,
-        y:10+5,
-        width:60,
-        height:60,
-        nameImageArr:['speakerOn','speakerOff'],
-    }
+        },
+        {
+            name: 'buttonSpeaker',
+            x:170,//510
+            y:12+5,
+            width:60,
+            height:60,
+            nameImageArr:['speakerOn','speakerOff'],
+        }
+    ]
     this.drawArrowGo = function () // нарисовать стрелку вперед
     {
         drawSprite(context,imageArr.get(this.arrowGo.nameImage),
@@ -326,8 +333,8 @@ function Interface()// класс интерфейса внизу экрана
         context.beginPath();
         context.font = "25px serif";
         context.fillStyle = 'yellow';
-        context.fillText('x' + quantityBackStep, this.x + this.arrowBack.x + this.arrowBack.width + 5
-                         , this.y + this.arrowBack.y + 38);
+        context.fillText('x' + quantityBackStep, this.x + this.objArr[1].x + this.objArr[1].width + 5
+                         , this.y + this.objArr[1].y + 38);
         context.stroke();
     }
     this.draw=function ()
@@ -340,29 +347,41 @@ function Interface()// класс интерфейса внизу экрана
         context.lineWidth = 3;
         context.strokeRect(this.x,this.y,this.width-2,this.height-2);
         context.restore();
-        this.drawArrowGo();
-        this.drawArrowBack();
-        this.drawCountBackStep();
-        this.drawVideoButton();
-        this.drawSettings();
-        this.drawSpeaker(soundOn == true ? 0 : 1);
+        for (let i = 0; i < this.objArr.length;i++)
+        {
+
+            if (this.objArr[i].name=='buttonSpeaker')
+            {
+                let nameImg = this.objArr[i].nameImageArr[soundOn == true ? 0 : 1];
+                this.objArr[i].nameImage = nameImg;
+            }
+            drawSprite(context,imageArr.get(this.objArr[i].nameImage),
+                            this.x+this.objArr[i].x,this.y+this.objArr[i].y,camera,1)
+        }
+       // this.drawCountBackStep();
+        //this.drawArrowGo();
+        //this.drawArrowBack();
+        
+        //this.drawVideoButton();
+        //this.drawSettings();
+        //this.drawSpeaker(soundOn == true ? 0 : 1);
         context.beginPath();
         context.font = "24px serif";
         context.fillStyle = 'white';
         context.fillText(this.textLabel, this.x +5, this.y +20);
         context.stroke();
 
-        context.beginPath();
-        context.font = "22px serif";
-        context.fillStyle = 'green';
-        context.fillText(this.powerCommand0, this.x +300, this.y +50);
-        context.stroke();
+        //context.beginPath();
+        //context.font = "22px serif";
+        //context.fillStyle = 'green';
+        //context.fillText(this.powerCommand0, this.x +300, this.y +50);
+        //context.stroke();
 
-        context.beginPath();
-        context.font = "22px serif";
-        context.fillStyle = 'red';
-        context.fillText(this.powerCommand1, this.x +450, this.y +50);
-        context.stroke();
+        //context.beginPath();
+        //context.font = "22px serif";
+        //context.fillStyle = 'red';
+        //context.fillText(this.powerCommand1, this.x +450, this.y +50);
+        //context.stroke();
     }
     this.calcPower=function()
     {
@@ -379,52 +398,60 @@ function Interface()// класс интерфейса внизу экрана
     }
     this.update=function()
     {
+        
         let mouseIn = '';
-        if (mouseX > this.x + this.arrowBack.x && 
-            mouseX < this.x + this.arrowBack.x +this.arrowBack.width &&
-            mouseY > this.y + this.arrowBack.y && 
-            mouseY < this.y + this.arrowBack.y +this.arrowBack.height )
+        let flag = false;
+        for (let i = 0; i < this.objArr.length;i++)
         {
-            mouseIn = 'arrowBack';
-            //quantityBackStep--;
+            if (mouseX > this.x + this.objArr[i].x && 
+                mouseX < this.x + this.objArr[i].x +this.objArr[i].width &&
+                mouseY > this.y + this.objArr[i].y && 
+                mouseY < this.y + this.objArr[i].y +this.objArr[i].height )
+            {
+                mouseIn = this.objArr[i].name;
+                flag = true;
+                //quantityBackStep--;
+            }
         }
-        else if (mouseX > this.x + this.arrowGo.x && 
-            mouseX < this.x + this.arrowGo.x +this.arrowGo.width &&
-            mouseY > this.y + this.arrowGo.y && 
-            mouseY < this.y + this.arrowGo.y +this.arrowGo.height)
-        {
-            mouseIn = 'arrowGo';
-            //nextStepCommand();
-        }
-        else if (mouseX > this.x + this.videoButton.x && 
-            mouseX < this.x + this.videoButton.x +this.videoButton.width &&
-            mouseY > this.y + this.videoButton.y && 
-            mouseY < this.y + this.videoButton.y +this.videoButton.height)
-        {
-            mouseIn = 'videoButton';
-            //nextStepCommand();
-        }
-        else if (mouseX > this.x + this.buttonSettings.x && 
-            mouseX < this.x + this.buttonSettings.x +this.buttonSettings.width &&
-            mouseY > this.y + this.buttonSettings.y && 
-            mouseY < this.y + this.buttonSettings.y +this.buttonSettings.height)
-        {
-            mouseIn = 'buttonSettings';
-            //nextStepCommand();
-        }
-        else if (mouseX > this.x + this.buttonSpeaker.x && 
-            mouseX < this.x + this.buttonSpeaker.x +this.buttonSpeaker.width &&
-            mouseY > this.y + this.buttonSpeaker.y && 
-            mouseY < this.y + this.buttonSpeaker.y +this.buttonSpeaker.height)
-        {
-            mouseIn = 'buttonSpeaker';
-            //nextStepCommand();
-        }
-        else 
+        if (flag==false)
         {
             mouseIn = 'none';
 
         }
+        //else if (mouseX > this.x + this.arrowGo.x && 
+        //    mouseX < this.x + this.arrowGo.x +this.arrowGo.width &&
+        //    mouseY > this.y + this.arrowGo.y && 
+        //    mouseY < this.y + this.arrowGo.y +this.arrowGo.height)
+        //{
+        //    mouseIn = 'arrowGo';
+        //    //nextStepCommand();
+        //}
+        //else if (mouseX > this.x + this.videoButton.x && 
+        //    mouseX < this.x + this.videoButton.x +this.videoButton.width &&
+        //    mouseY > this.y + this.videoButton.y && 
+        //    mouseY < this.y + this.videoButton.y +this.videoButton.height)
+        //{
+        //    mouseIn = 'videoButton';
+        //    //nextStepCommand();
+        //}
+        //else if (mouseX > this.x + this.buttonSettings.x && 
+        //    mouseX < this.x + this.buttonSettings.x +this.buttonSettings.width &&
+        //    mouseY > this.y + this.buttonSettings.y && 
+        //    mouseY < this.y + this.buttonSettings.y +this.buttonSettings.height)
+        //{
+        //    mouseIn = 'buttonSettings';
+        //    //nextStepCommand();
+        //}
+        //else if (mouseX > this.x + this.buttonSpeaker.x && 
+        //    mouseX < this.x + this.buttonSpeaker.x +this.buttonSpeaker.width &&
+        //    mouseY > this.y + this.buttonSpeaker.y && 
+        //    mouseY < this.y + this.buttonSpeaker.y +this.buttonSpeaker.height)
+        //{
+        //    mouseIn = 'buttonSpeaker';
+        //    //nextStepCommand();
+        //}
+//        else 
+    
         if (mouseLeftClick()==true)
         {
             let arr = [];
@@ -476,6 +503,7 @@ function Interface()// класс интерфейса внизу экрана
             if (mouseIn == 'none') this.textLabel='';
         }
         this.calcPower();
+        
 
     }
 
@@ -857,29 +885,19 @@ function drawAll()// нарисовать все
     for (let i = 0; i < panzerArr.length;i++)
     {
         panzerArr[i].draw(context,camera,1);
-        if (panzerArr[i].being==true)   
-        {
-            drawLineArr(panzerArr[i],"red")
-            //context.fillStyle= 'red';
-            //context.fillRect(panzerArr[i].x, panzerArr[i].y - 7, panzerArr[i].width,4);
-            //context.fillStyle= 'green';
-            //context.fillRect(panzerArr[i].x, panzerArr[i].y - 7,
-            //                panzerArr[i].width*panzerArr[i].HP/panzerArr[i].maxHP,4);
-            //context.beginPath();
-            //context.font = "25px serif";
-            //context.fillStyle = 'white';
-            //let x = panzerArr[i].x;
-            //let y = panzerArr[i].y;
-            //context.fillText(i+'', x+mapSize/2-camera.x-14 , y+mapSize/2-camera.y+6)
-            //context.stroke();
+        //if (panzerArr[i].being==true)   
+        //{
+        //    drawLineArr(panzerArr[i],"red")
+  
 
-        };
+        //};
     }
+    //for (let i = 0; i < blockageArr.length; i++)
+    //{
+    //    drawLineArr(blockageArr[i])
+    //}
     bullets.drawBullets(context);
-    for (let i = 0; i < blockageArr.length; i++)
-    {
-        drawLineArr(blockageArr[i])
-    }
+ 
 
 
     if (numSelectPanzer!=null &&panzerArr[numSelectPanzer].moving==false)
@@ -909,7 +927,7 @@ function drawAll()// нарисовать все
     {
         if (panzerArr[i].being==true)   
         {
-            drawLineArr(panzerArr[i],"red")
+            //drawLineArr(panzerArr[i],"red")
             context.fillStyle= 'red';
             context.fillRect(panzerArr[i].x, panzerArr[i].y - 7, panzerArr[i].width,4);
             context.fillStyle= 'green';
@@ -1028,10 +1046,12 @@ function drawWaveRoute(context)// нарисовать волну для пои�
             else 
             {
                 if (numSelectPanzer!=null && panzerArr[numSelectPanzer].moving==false &&
+                    panzerArr[numSelectPanzer].command==0 &&
                     panzerArr[numSelectPanzer].attack==false &&
                     panzerArr[numSelectPanzer].attackThrow==false &&
                     panzerArr[numSelectPanzer].xMap!=searchRoute.xFinish && 
-                    panzerArr[numSelectPanzer].yMap!=searchRoute.yFinish) 
+                    panzerArr[numSelectPanzer].yMap!=searchRoute.yFinish 
+                    ) 
                 {
                     drawPointRoute(context, x, y, dist, 'blue');
                 }
@@ -1072,11 +1092,11 @@ function drawPointRoute(context,x,y,dist,color)// нарисовать точк�
 	        context.strokeStyle = 'blue';
 	        context.stroke();
 
-            context.beginPath();
-            context.font = "18px serif";
-            context.fillStyle = 'red';
-            context.fillText(dist+'', x*mapSize+mapSize/2-camera.x-4 , y*mapSize+mapSize/2-camera.y+6)
-            context.stroke();
+            //context.beginPath();
+            //context.font = "18px serif";
+            //context.fillStyle = 'red';
+            //context.fillText(dist+'', x*mapSize+mapSize/2-camera.x-4 , y*mapSize+mapSize/2-camera.y+6)
+            //context.stroke();
 }
 function saveStepData(arr,flagCommand=true)
 {
@@ -1387,11 +1407,7 @@ function update()// основной цикл игры
             }
         }
     }
-    if (keyUpDuration('F2',500)==true)
-    {
-        autoGame = !autoGame;
-        if (autoGame==true) calcStepII(numCommandStep);
-    }
+
     burst.end(function () {
         if (numPanzerDead!=null)
         {
@@ -1416,7 +1432,7 @@ function update()// основной цикл игры
     bullets.update();
     collisioinBulets();
     interface.update();
-    redactGameMap();
+   // ControllKeyBoard();
     bigText.control();
     burst.update();
 }
@@ -1998,9 +2014,14 @@ function updateMapSearchRoute()// обновить карту для поиск�
  //   searchRoute.consoleMap();
 }
 
-function redactGameMap()// редактировать карту
+function ControllKeyBoard()// редактировать карту
 {
 
+    if (keyUpDuration('F2',500)==true)
+    {
+        autoGame = !autoGame;
+        if (autoGame==true) calcStepII(numCommandStep);
+    }
     if (checkPressKey('Delete')==true || checkPressKey('KeyD')==true)
     {
         let objUnderMouse = calcUnderMouseObj();

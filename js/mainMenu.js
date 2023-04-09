@@ -10,6 +10,7 @@
     this.listSelectMain = ['Играть', 'Авторы'/*, 'Помошь'*/, 'Выход'];
     this.listSelectNewGame = ['Да', 'Нет'];
     this.selectHower = null;
+    this.authorScreen = new AuthorScreen();
     this.start=function()
     {
         //if (this.being==true)
@@ -21,7 +22,7 @@
         this.y=200;
         this.x = screenWidth/2-this.widthOneItem/2;
         this.timerId=setInterval(function(){
-           mainMenu.update(); 
+          if (mainMenu.authorScreen.being==false) mainMenu.update(); 
         },20);
     }
     this.close=function()
@@ -59,6 +60,7 @@
             context.fillText(this.listSelectMain[i],x+addX,y+i*this.heightOneItem+this.dist*i+this.heightOneItem/2+sizeFont/3);
             context.restore();
         }
+        this.authorScreen.draw();
         //context.fillText("Играть.",20,y+80);
         //context.fillText("Продолжить.",20,y+120);
         //context.fillText("Помошь.",20,y+160);
@@ -112,8 +114,14 @@
                     {
                         this.close();
                         windowLevel.start();
-                        break;
-                    }
+                        
+                    }break;
+                case 1: 
+                    {
+                       // this.close();
+                        this.authorScreen.start();
+                       
+                    } break;
                 case 2: window.close(); break;
             }
         }
@@ -130,4 +138,79 @@
         //    }
         //}
     }    
+}
+function AuthorScreen()
+{
+    this.being = false;
+    this.timerId = null;
+    this.buttonMainMenu = { 
+        width:330,
+        height:40,
+        x:null,
+        y:null,
+       
+        colorText:'rgb(255,255,0)',
+        text: 'Выйти в главное меню',
+       
+
+    }
+    this.buttonMainMenu.x = screenWidth / 2 - this.buttonMainMenu.width / 2;
+    this.buttonMainMenu.y =  530; 
+    this.start=function()
+    {
+        //if (this.being==true)
+        this.being = true;
+        this.timerId=setInterval(function(){
+           mainMenu.authorScreen.update(); 
+        },20);
+    }
+    this.close=function()
+    {
+        this.being = false;
+        clearInterval(this.timerId);
+    }
+    this.draw=function()
+    {
+        if (this.being==true)
+        {
+            context.fillStyle='rgb(0,0,0)';
+            context.fillRect(0,0,camera.width,screenHeight/*camera.height*/);// очистка экрана
+            context.fillStyle='rgb(255,255,0)';
+            let strCount = 'Авторы';
+            context.font = '50px Arial';
+            let widthTextCount = context.measureText(strCount).width;
+            context.fillText(strCount,screenWidth/2-widthTextCount/2,50) ;
+
+            context.fillStyle='rgb(255,255,255)';
+           // let strCount = 'Авторы';
+            context.font = '30px Arial'
+            //let widthTextCount = context.measureText(strCount).width;
+            let y = 200;
+            let yStep = 50;
+            context.fillText('Разработчик: Владимир Костенко.', 30, y); 
+            context.fillText('Источник некоторой графики и звуков:', 30, y+yStep); 
+            context.fillText('1. https://opengameart.org', 30, y+yStep*2); 
+            context.fillText('2. https://www.flaticon.com/free-icons/settings', 30, y+yStep*3); 
+
+            context.strokeStyle = 'red'//"rgb(128,128,128)";
+            context.strokeRect(this.buttonMainMenu.x,this.buttonMainMenu.y,
+                            this.buttonMainMenu.width,this.buttonMainMenu.height);
+
+            context.font = "32px serif";
+            context.fillStyle = this.buttonMainMenu.colorText;
+            context.fillText(this.buttonMainMenu.text,this.buttonMainMenu.x+8,this.buttonMainMenu.y+30)
+        }
+    }
+    this.update=function()
+    {
+         //   
+        if (mouseLeftClick()==true)
+        {// alert(123);
+            if (checkInObj(this.buttonMainMenu,mouseX,mouseY)==true)
+            {
+                this.close();
+            }
+        }
+        
+    }
 }
