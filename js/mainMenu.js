@@ -7,7 +7,8 @@
     this.widthOneItem = 380;
     this.heightOneItem = 80;
     this.dist = 15;
-    this.listSelectMain = ['Играть', 'Авторы'/*, 'Помошь'*/, 'Выход'];
+    this.listSelectMain = redactorOpen==false?['Играть', 'Авторы'/*, 'Помошь'*/, 'Выход']:
+                                        ['Играть','Загрузить','Редактор', 'Авторы'/*, 'Помошь'*/, 'Выход'];
     this.listSelectNewGame = ['Да', 'Нет'];
     this.selectHower = null;
     this.authorScreen = new AuthorScreen();
@@ -101,7 +102,7 @@
                 mY>y+i*(this.heightOneItem+this.dist)&&
                 mY<y+i*(this.heightOneItem+this.dist)+ this.heightOneItem)
             {
-                this.selectHower = i;
+                this.selectHower = this.listSelectMain[i];
 
             }
 
@@ -110,19 +111,26 @@
         {
             switch(this.selectHower)
             {
-                case 0: 
+                case 'Играть': 
+                case 'Продолжить': 
                     {
                         this.close();
                         windowLevel.start();
                         
                     }break;
-                case 1: 
+                case 'Редактор': 
+                    {
+                        this.close();
+                        redactorMode = true;
+                        
+                    }break;
+                case 'Авторы': 
                     {
                        // this.close();
                         this.authorScreen.start();
                        
                     } break;
-                case 2: window.close(); break;
+                case 'Выход': window.close(); break;
             }
         }
         //if (mouseLeftClick())
