@@ -16,7 +16,7 @@ var imageArr = new Map();
 var nameImageArr=["body13","body12","body11","body21","body22","body23",'tower13','tower12','tower11',
                    'tower13','tower12','tower11','tower23','tower22','tower21',
                    'wall','water','AIM','arrow','arrowBack','video','lock','settings','Explosion',
-                  'speakerOff',"speakerOn"];
+                  'speakerOff',"speakerOn",'delete',"deleteBig",'menu'];
 var imageLoad = false;
 var countLoadImage = 0;
 var soundOn = true;
@@ -84,8 +84,8 @@ function Panzer(command,type,xMap,yMap)// класс танк
     this.y = yMap * mapSize+(mapSize/2-this.height/2);
     this.bodyNameImage = panzerOption[type].bodyNameImage//this.command == 0 ? 'body13' : 'body23';
     this.towerNameImage = panzerOption[type].towerNameImage;
-    this.angleBody = 90;
-    this.angleTower = 90;
+    this.angleBody = command == 0 ? 0 : 180;
+    this.angleTower = command == 0 ? 0 : 180;
     this.towerX = null;// координаты башни 
     this.towerY = null;
     this.mixTowerX = panzerOption[type].mixTowerX;// смешение башни
@@ -267,6 +267,7 @@ function Interface()// класс интерфейса внизу экрана
     this.powerCommand0 = 0;
     this.powerCommand1 = 0;
     this.sizeCell = 60;
+    this.select = {num:null,name:null,type:null,nameImage:null,typePanzer:null,command:null};
     this.objArr=[
          {
             name: 'arrowGo',
@@ -329,6 +330,25 @@ function Interface()// класс интерфейса внизу экрана
             height:40,
             nameImage:'water',
         },
+        {
+            name: 'delete',
+            type:'delete',
+            x:20+this.sizeCell*8,
+            y:25+5,
+            width:40,
+            height:40,
+            nameImage:'deleteBig',
+        },
+        {
+            name: 'menu',
+            type:'button',
+            x:20+this.sizeCell*12,
+            y:20+5,
+            width:40,
+            height:40,
+            nameImage:'menu',
+        },
+
         //{
         //    name: 'panzer11',
         //    type:'panzer',
@@ -430,7 +450,7 @@ function Interface()// класс интерфейса внизу экрана
         {
             for (let i = 0; i < this.objArrRedactor.length;i++)
             {
-                if (this.objArrRedactor[i].type=='blockage')
+                if (this.objArrRedactor[i].type!='panzer')
                 {
                     drawSprite(context, imageArr.get(this.objArrRedactor[i].nameImage),
                                 this.x + this.objArrRedactor[i].x, 
@@ -439,13 +459,24 @@ function Interface()// класс интерфейса внизу экрана
                 else if (this.objArrRedactor[i].type=='panzer')
                 {
                     //Panzer(command, type, xMap, yMap);
-                    let panzer = new Panzer(this.objArrRedactor[i].command,
-                                    this.objArrRedactor[i].typePanzer,0,0);
-                    panzer.x = this.x + this.objArrRedactor[i].x;
-                    panzer.y = this.y + this.objArrRedactor[i].y;
-                    panzer.being = true;
-                    panzer.draw (context,camera,1);
+                    drawPanzer(this.x + this.objArrRedactor[i].x,this.y + this.objArrRedactor[i].y,
+                        this.objArrRedactor[i].typePanzer,this.objArrRedactor[i].command)
+                    //let panzer = new Panzer(this.objArrRedactor[i].command,
+                    //                this.objArrRedactor[i].typePanzer,0,0);
+                    //panzer.x = this.x + this.objArrRedactor[i].x;
+                    //panzer.y = this.y + this.objArrRedactor[i].y;
+                    //panzer.being = true;
+                    //panzer.draw (context,camera,1);
                     //console.log(panzer);
+                }
+                if (this.select.num==i)
+                {
+                    context.save();
+                    context.lineWidth = 3;
+                    context.strokeStyle = "blue";
+                    context.strokeRect(this.x+this.objArrRedactor[i].x,this.y+ this.objArrRedactor[i].y,
+                                        this.objArrRedactor[i].width, this.objArrRedactor[i].height);
+                    context.restore();
                 }
             }
         }
@@ -539,39 +570,6 @@ function Interface()// класс интерфейса внизу экрана
             mouseIn = 'none';
 
         }
-        //else if (mouseX > this.x + this.arrowGo.x && 
-        //    mouseX < this.x + this.arrowGo.x +this.arrowGo.width &&
-        //    mouseY > this.y + this.arrowGo.y && 
-        //    mouseY < this.y + this.arrowGo.y +this.arrowGo.height)
-        //{
-        //    mouseIn = 'arrowGo';
-        //    //nextStepCommand();
-        //}
-        //else if (mouseX > this.x + this.videoButton.x && 
-        //    mouseX < this.x + this.videoButton.x +this.videoButton.width &&
-        //    mouseY > this.y + this.videoButton.y && 
-        //    mouseY < this.y + this.videoButton.y +this.videoButton.height)
-        //{
-        //    mouseIn = 'videoButton';
-        //    //nextStepCommand();
-        //}
-        //else if (mouseX > this.x + this.buttonSettings.x && 
-        //    mouseX < this.x + this.buttonSettings.x +this.buttonSettings.width &&
-        //    mouseY > this.y + this.buttonSettings.y && 
-        //    mouseY < this.y + this.buttonSettings.y +this.buttonSettings.height)
-        //{
-        //    mouseIn = 'buttonSettings';
-        //    //nextStepCommand();
-        //}
-        //else if (mouseX > this.x + this.buttonSpeaker.x && 
-        //    mouseX < this.x + this.buttonSpeaker.x +this.buttonSpeaker.width &&
-        //    mouseY > this.y + this.buttonSpeaker.y && 
-        //    mouseY < this.y + this.buttonSpeaker.y +this.buttonSpeaker.height)
-        //{
-        //    mouseIn = 'buttonSpeaker';
-        //    //nextStepCommand();
-        //}
-//        else 
     
         if (mouseLeftClick()==true)
         {
@@ -605,6 +603,36 @@ function Interface()// класс интерфейса внизу экрана
             {
                if (soundOn==true) audio.play('click');
             }
+            if (redactorMode==true)
+            {
+                for (let i = 0; i < this.objArrRedactor.length;i++)
+                {
+                    if (mouseX > this.x + this.objArrRedactor[i].x && 
+                        mouseX < this.x + this.objArrRedactor[i].x +this.objArrRedactor[i].width &&
+                        mouseY > this.y + this.objArrRedactor[i].y && 
+                        mouseY < this.y + this.objArrRedactor[i].y +this.objArrRedactor[i].height )
+                    {
+                        if (this.objArrRedactor[i].type!='button')
+                        {
+                            this.select.num = i;
+                            this.select.type = this.objArrRedactor[i].type;
+                            this.select.name = this.objArrRedactor[i].name;
+                            this.select.nameImage = this.objArrRedactor[i].nameImage;
+                            if (this.select.type=='panzer')
+                            {
+                                this.select.typePanzer = this.objArrRedactor[i].typePanzer;
+                                this.select.command = this.objArrRedactor[i].command;
+                            }
+                            else
+                            {
+                                this.select.typePanzer =null;
+                                this.select.command = null;
+                            }
+                        }
+                        console.log(this.select);
+                    }
+                }
+            }
            // resetMouseLeft();
             console.log('listBackStep');
             console.log(listBackStep);
@@ -629,6 +657,8 @@ function Interface()// класс интерфейса внизу экрана
             if (mouseIn == 'panzer21') this.textLabel='Выбрать легкий танк команды красных';
             if (mouseIn == 'panzer22') this.textLabel='Выбрать средний танк команды красных';
             if (mouseIn == 'panzer23') this.textLabel='Выбрать тежылый танк команды красных';
+            if (mouseIn == 'delete') this.textLabel='Удаление';
+            if (mouseIn == 'menu') this.textLabel='Меню';
             
 
             if (mouseIn == 'none') this.textLabel='';
@@ -979,7 +1009,7 @@ function create()
     windowLevel = new WindowLevel();
     searchRoute = new SearchRoute();
     searchRoute.initMap(map.width/mapSize,map.height/mapSize)
-    createRandomMap(100,18);
+   // createRandomMap(100,18);
     bullets = new Bullets();
     interface = new Interface();
     bigText = new BigText();
@@ -1080,10 +1110,49 @@ function drawAll()// нарисовать все
                             panzerArr[i].width*panzerArr[i].HP/panzerArr[i].maxHP,4);
         }
     }
+    if (redactorMode==true)
+    {
+        let select = interface.select;
+        let xMap = Math.trunc(mouseX / mapSize);
+        let yMap = Math.trunc(mouseY / mapSize);
+        if (mouseY < interface.y)
+        {
+            if (checkPressKey('Delete')==true || select.type=="delete" )
+            {
+                drawSprite(context,imageArr.get('delete'),xMap*mapSize+10,yMap*mapSize+10,camera,1)
+            }
+            else
+            {
+                if (select.type=="blockage")
+                {
+                    drawSprite(context,imageArr.get(select.nameImage),xMap*mapSize,yMap*mapSize,camera,1)
+                }
+                else if (select.type=="panzer")
+                {
+                    let x = xMap * mapSize + mapSize / 2 - panzerOption[select.typePanzer].width / 2;
+                    let y = yMap * mapSize + mapSize / 2 - panzerOption[select.typePanzer].height / 2;
+                    drawPanzer(x, y, select.typePanzer, select.command);
+                }
+                //else if (select.type=="delete")
+                {
+             //       drawSprite(context,imageArr.get('delete'),xMap*mapSize+10,yMap*mapSize+10,camera,1)
+                }
+            }
+        }
+       
+    }
     bigText.draw();
     burst.draw();
     settings.draw();
    
+}
+function drawPanzer(x,y,type,command)
+{
+    let panzer = new Panzer(command,type,0,0);
+    panzer.x = x;
+    panzer.y = y;
+    panzer.being = true;
+    panzer.draw (context,camera,1);
 }
 function drawVisibleAttackLine(context)
 {
@@ -1276,6 +1345,57 @@ function deleteListBackStep()
 function updateRedactor ()
 {
     interface.update();
+    let select = interface.select;
+    if (mouseLeftPress==true)
+    {
+        if (checkObjInCell(Math.trunc(mouseX/mapSize),Math.trunc(mouseY/mapSize))==false&&
+            mouseY<interface.y)
+        {
+           if (select.type=='blockage')
+           {
+                let type = null;
+                if (select.name=='wall') type = 0;
+                if (select.name=='water') type = 1;
+                var blockage = new Blockage(type, Math.trunc(mouseX / mapSize),Math.trunc( mouseY / mapSize));
+                // panzer.draw(context,camera,1);
+                blockage.lineArr=calcLineArr(blockage);
+                blockageArr.push(blockage);
+           }
+           else if (select.type=='panzer')
+           {
+                var panzer = new Panzer(select.command,select.typePanzer, Math.trunc(mouseX / mapSize),
+                                        Math.trunc( mouseY / mapSize));
+                panzer.being = true;
+                // panzer.draw(context,camera,1);
+                
+                panzerArr.push(panzer);
+                console.log('NEW PANZER');
+                let len = panzerArr.length - 1;
+                panzerArr[len].lineArr=calcLineArr(panzerArr[len],'panzer',len);
+                updateImUnderGunPanzer();
+            }
+
+        }  
+        if (checkPressKey('Delete')==true || select.type=='delete')
+        {
+            let objUnderMouse = calcUnderMouseObj();
+            if (objUnderMouse.type=='blockage')
+            {  
+                blockageArr.splice(objUnderMouse.numInArr,1);
+            }
+            if (objUnderMouse.type=='panzer')
+            {  
+                if (numSelectPanzer!=objUnderMouse.numInArr)
+                {
+                    panzerArr.splice(objUnderMouse.numInArr,1);
+                }
+           
+            }
+        }
+    }
+        
+ 
+   
 }
 function update()// основной цикл игры
 {
