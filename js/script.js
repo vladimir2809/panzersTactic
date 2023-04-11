@@ -16,7 +16,7 @@ var imageArr = new Map();
 var nameImageArr=["body13","body12","body11","body21","body22","body23",'tower13','tower12','tower11',
                    'tower13','tower12','tower11','tower23','tower22','tower21',
                    'wall','water','AIM','arrow','arrowBack','video','lock','settings','Explosion',
-                  'speakerOff',"speakerOn"];
+                  'speakerOff',"speakerOn",'delete',"deleteBig",'menu'];
 var imageLoad = false;
 var countLoadImage = 0;
 var soundOn = true;
@@ -44,8 +44,14 @@ var backStepOne = [];
 var gameLevel = 1;
 var panzerMoveFlag = false;// выбранный танк в этом ходу двигался
 var numPanzerDead = null;
+var saveSelect = {numPanz:null,flag:false};
 var quantityPanzInCommand = [0, 0];
 var levelGameOpen = [1,]// список открытых уровней
+
+for (let i = 2; i <= 25; i++) levelGameOpen.push(i);
+
+var redactorOpen = true;
+var redactorMode = false;
 var levelGame = 0;// текуший уровень игры
 var dataRAMLevel = null;// уровень в памяти
 var line = { x:null, y:null, x1:null, y1:null, numP:null };// линия для вычесления пересечений
@@ -78,8 +84,8 @@ function Panzer(command,type,xMap,yMap)// класс танк
     this.y = yMap * mapSize+(mapSize/2-this.height/2);
     this.bodyNameImage = panzerOption[type].bodyNameImage//this.command == 0 ? 'body13' : 'body23';
     this.towerNameImage = panzerOption[type].towerNameImage;
-    this.angleBody = 90;
-    this.angleTower = 90;
+    this.angleBody = command == 0 ? 0 : 180;
+    this.angleTower = command == 0 ? 0 : 180;
     this.towerX = null;// координаты башни 
     this.towerY = null;
     this.mixTowerX = panzerOption[type].mixTowerX;// смешение башни
@@ -260,42 +266,128 @@ function Interface()// класс интерфейса внизу экрана
     this.textLabel = '';
     this.powerCommand0 = 0;
     this.powerCommand1 = 0;
-    this.arrowGo = {
-        x: 650,
-        y: 27+5,
-        width: 60,
-        height: 30,
-        nameImage: 'arrow',
-    };
-    this.arrowBack = {
-        x: 60,
-        y: 22+5,
-        width: 60,
-        height: 45,
-        nameImage: 'arrowBack',
-    };
-    this.videoButton = {
-        x: 205,
-        y: 22+5,
-        width: 60,
-        height: 40,
-        nameImage: 'video',
-    };
-    this.buttonSettings = {
-        x:380,
-        y:20+5,
-        width:60,
-        height:60,
-        nameImage:'settings',
+    this.sizeCell = 60;
+    this.select = {num:null,name:null,type:null,nameImage:null,typePanzer:null,command:null};
+    this.objArr=[
+         {
+            name: 'arrowGo',
+            x: 550,//650
+            y: 27+5,
+            width: 60,
+            height: 30,
+            nameImage: 'arrow',
+        },
+        //{
+        //    name:'arrowBack',
+        //    x: 60,
+        //    y: 22+5,
+        //    width: 60,
+        //    height: 45,
+        //    nameImage: 'arrowBack',
+        //},
+        //{
+        //    name:'videoButton',
+        //    x: 205,
+        //    y: 22+5,
+        //    width: 60,
+        //    height: 40,
+        //    nameImage: 'video',
+        //},
+        {
+            name: 'buttonSettings',
+            x:380,
+            y:20+5,
+            width:60,
+            height:60,
+            nameImage:'settings',
 
+        },
+        {
+            name: 'buttonSpeaker',
+            x:170,//510
+            y:12+5,
+            width:60,
+            height:60,
+            nameImageArr:['speakerOn','speakerOff'],
+        }
+    ]
+    this.objArrRedactor=[
+        {
+            name: 'wall',
+            type:'blockage',
+            x:20,
+            y:25+5,
+            width:40,
+            height:40,
+            nameImage:'wall',
+        },
+        {
+            name: 'water',
+            type:'blockage',
+            x:20+this.sizeCell,
+            y:25+5,
+            width:40,
+            height:40,
+            nameImage:'water',
+        },
+        {
+            name: 'delete',
+            type:'delete',
+            x:20+this.sizeCell*8,
+            y:25+5,
+            width:40,
+            height:40,
+            nameImage:'deleteBig',
+        },
+        {
+            name: 'menu',
+            type:'button',
+            x:20+this.sizeCell*12,
+            y:20+5,
+            width:40,
+            height:40,
+            nameImage:'menu',
+        },
+
+        //{
+        //    name: 'panzer11',
+        //    type:'panzer',
+        //    x:380,
+        //    y:20+5,
+        //    width:40,
+        //    height:40,
+        //    nameImage:'',
+        //},
+    ]
+    for (let i = 0; i < 6;i++)
+    {
+        
+        this.objArrRedactor.push({
+            name: 'panzer'+(Math.trunc((i/3))+1)+''+((i%3)+1),
+            type:'panzer',
+            typePanzer: i % 3,
+            command: Math.trunc((i / 3)),
+            width:panzerOption[i % 3].width,
+            height:panzerOption[i % 3].height,
+            x:140+i*this.sizeCell,
+            y:25+5,
+            nameImage:'',
+        });
+        
     }
-    this.buttonSpeaker = {
-        x:510,
-        y:10+5,
-        width:60,
-        height:60,
-        nameImageArr:['speakerOn','speakerOff'],
+    for (let i = 0; i < this.objArrRedactor.length;i++)    
+    {
+        if (this.objArrRedactor[i].type =='panzer')
+        {
+            this.objArrRedactor[i].x += this.sizeCell/3-this.objArrRedactor[i].width / 2;
+            this.objArrRedactor[i].y += this.sizeCell/3-this.objArrRedactor[i].height / 2;
+        }
     }
+    console.log(this.objArrRedactor);
+    //var nameImageArr=["body13","body12","body11","body21","body22","body23",'tower13','tower12','tower11',
+    //               'tower13','tower12','tower11','tower23','tower22','tower21',
+    //               'wall','water','AIM','arrow','arrowBack','video','lock','settings','Explosion',
+    //              'speakerOff',"speakerOn"];
     this.drawArrowGo = function () // нарисовать стрелку вперед
     {
         drawSprite(context,imageArr.get(this.arrowGo.nameImage),
@@ -326,8 +418,8 @@ function Interface()// класс интерфейса внизу экрана
         context.beginPath();
         context.font = "25px serif";
         context.fillStyle = 'yellow';
-        context.fillText('x' + quantityBackStep, this.x + this.arrowBack.x + this.arrowBack.width + 5
-                         , this.y + this.arrowBack.y + 38);
+        context.fillText('x' + quantityBackStep, this.x + this.objArr[1].x + this.objArr[1].width + 5
+                         , this.y + this.objArr[1].y + 38);
         context.stroke();
     }
     this.draw=function ()
@@ -340,29 +432,78 @@ function Interface()// класс интерфейса внизу экрана
         context.lineWidth = 3;
         context.strokeRect(this.x,this.y,this.width-2,this.height-2);
         context.restore();
-        this.drawArrowGo();
-        this.drawArrowBack();
-        this.drawCountBackStep();
-        this.drawVideoButton();
-        this.drawSettings();
-        this.drawSpeaker(soundOn == true ? 0 : 1);
+        if (redactorMode==false)
+        {
+            for (let i = 0; i < this.objArr.length;i++)
+            {
+
+                if (this.objArr[i].name=='buttonSpeaker')
+                {
+                    let nameImg = this.objArr[i].nameImageArr[soundOn == true ? 0 : 1];
+                    this.objArr[i].nameImage = nameImg;
+                }
+                drawSprite(context, imageArr.get(this.objArr[i].nameImage),
+                    this.x + this.objArr[i].x, this.y + this.objArr[i].y, camera, 1);
+            }
+        }
+        else
+        {
+            for (let i = 0; i < this.objArrRedactor.length;i++)
+            {
+                if (this.objArrRedactor[i].type!='panzer')
+                {
+                    drawSprite(context, imageArr.get(this.objArrRedactor[i].nameImage),
+                                this.x + this.objArrRedactor[i].x, 
+                                this.y + this.objArrRedactor[i].y, camera, 1);
+                }
+                else if (this.objArrRedactor[i].type=='panzer')
+                {
+                    //Panzer(command, type, xMap, yMap);
+                    drawPanzer(this.x + this.objArrRedactor[i].x,this.y + this.objArrRedactor[i].y,
+                        this.objArrRedactor[i].typePanzer,this.objArrRedactor[i].command)
+                    //let panzer = new Panzer(this.objArrRedactor[i].command,
+                    //                this.objArrRedactor[i].typePanzer,0,0);
+                    //panzer.x = this.x + this.objArrRedactor[i].x;
+                    //panzer.y = this.y + this.objArrRedactor[i].y;
+                    //panzer.being = true;
+                    //panzer.draw (context,camera,1);
+                    //console.log(panzer);
+                }
+                if (this.select.num==i)
+                {
+                    context.save();
+                    context.lineWidth = 3;
+                    context.strokeStyle = "blue";
+                    context.strokeRect(this.x+this.objArrRedactor[i].x,this.y+ this.objArrRedactor[i].y,
+                                        this.objArrRedactor[i].width, this.objArrRedactor[i].height);
+                    context.restore();
+                }
+            }
+        }
+       // this.drawCountBackStep();
+        //this.drawArrowGo();
+        //this.drawArrowBack();
+        
+        //this.drawVideoButton();
+        //this.drawSettings();
+        //this.drawSpeaker(soundOn == true ? 0 : 1);
         context.beginPath();
         context.font = "24px serif";
         context.fillStyle = 'white';
         context.fillText(this.textLabel, this.x +5, this.y +20);
         context.stroke();
 
-        context.beginPath();
-        context.font = "22px serif";
-        context.fillStyle = 'green';
-        context.fillText(this.powerCommand0, this.x +300, this.y +50);
-        context.stroke();
+        //context.beginPath();
+        //context.font = "22px serif";
+        //context.fillStyle = 'green';
+        //context.fillText(this.powerCommand0, this.x +300, this.y +50);
+        //context.stroke();
 
-        context.beginPath();
-        context.font = "22px serif";
-        context.fillStyle = 'red';
-        context.fillText(this.powerCommand1, this.x +450, this.y +50);
-        context.stroke();
+        //context.beginPath();
+        //context.font = "22px serif";
+        //context.fillStyle = 'red';
+        //context.fillText(this.powerCommand1, this.x +450, this.y +50);
+        //context.stroke();
     }
     this.calcPower=function()
     {
@@ -379,52 +520,57 @@ function Interface()// класс интерфейса внизу экрана
     }
     this.update=function()
     {
+        
         let mouseIn = '';
-        if (mouseX > this.x + this.arrowBack.x && 
-            mouseX < this.x + this.arrowBack.x +this.arrowBack.width &&
-            mouseY > this.y + this.arrowBack.y && 
-            mouseY < this.y + this.arrowBack.y +this.arrowBack.height )
+        let flag = false;
+        let commandPanz = null;
+        let typePanz = null;
+        if (redactorMode==false)
         {
-            mouseIn = 'arrowBack';
-            //quantityBackStep--;
+            for (let i = 0; i < this.objArr.length;i++)
+            {
+                if (mouseX > this.x + this.objArr[i].x && 
+                    mouseX < this.x + this.objArr[i].x +this.objArr[i].width &&
+                    mouseY > this.y + this.objArr[i].y && 
+                    mouseY < this.y + this.objArr[i].y +this.objArr[i].height )
+                {
+                    mouseIn = this.objArr[i].name;
+                    flag = true;
+                    //quantityBackStep--;
+                }
+            }
         }
-        else if (mouseX > this.x + this.arrowGo.x && 
-            mouseX < this.x + this.arrowGo.x +this.arrowGo.width &&
-            mouseY > this.y + this.arrowGo.y && 
-            mouseY < this.y + this.arrowGo.y +this.arrowGo.height)
+        else
         {
-            mouseIn = 'arrowGo';
-            //nextStepCommand();
+            for (let i = 0; i < this.objArrRedactor.length;i++)
+            {
+                if (mouseX > this.x + this.objArrRedactor[i].x && 
+                    mouseX < this.x + this.objArrRedactor[i].x +this.objArrRedactor[i].width &&
+                    mouseY > this.y + this.objArrRedactor[i].y && 
+                    mouseY < this.y + this.objArrRedactor[i].y +this.objArrRedactor[i].height )
+                {
+                 //   if(this.objArrRedactor[i].type!='panzer')
+                    {
+                        mouseIn = this.objArrRedactor[i].name;
+                    }
+                    //else
+                    //{
+                    //    mouseIn ='panzer';
+                    //    commandPanz = this.objArrRedactor[i].command;
+                    //    typePanz = this.objArrRedactor[i].typePanz;
+                    //}
+                
+                    flag = true;
+                    //quantityBackStep--;
+                }
+            }
         }
-        else if (mouseX > this.x + this.videoButton.x && 
-            mouseX < this.x + this.videoButton.x +this.videoButton.width &&
-            mouseY > this.y + this.videoButton.y && 
-            mouseY < this.y + this.videoButton.y +this.videoButton.height)
-        {
-            mouseIn = 'videoButton';
-            //nextStepCommand();
-        }
-        else if (mouseX > this.x + this.buttonSettings.x && 
-            mouseX < this.x + this.buttonSettings.x +this.buttonSettings.width &&
-            mouseY > this.y + this.buttonSettings.y && 
-            mouseY < this.y + this.buttonSettings.y +this.buttonSettings.height)
-        {
-            mouseIn = 'buttonSettings';
-            //nextStepCommand();
-        }
-        else if (mouseX > this.x + this.buttonSpeaker.x && 
-            mouseX < this.x + this.buttonSpeaker.x +this.buttonSpeaker.width &&
-            mouseY > this.y + this.buttonSpeaker.y && 
-            mouseY < this.y + this.buttonSpeaker.y +this.buttonSpeaker.height)
-        {
-            mouseIn = 'buttonSpeaker';
-            //nextStepCommand();
-        }
-        else 
+        if (flag==false)
         {
             mouseIn = 'none';
 
         }
+    
         if (mouseLeftClick()==true)
         {
             let arr = [];
@@ -457,6 +603,42 @@ function Interface()// класс интерфейса внизу экрана
             {
                if (soundOn==true) audio.play('click');
             }
+            if (redactorMode==true)
+            {
+                for (let i = 0; i < this.objArrRedactor.length;i++)
+                {
+                    if (mouseX > this.x + this.objArrRedactor[i].x && 
+                        mouseX < this.x + this.objArrRedactor[i].x +this.objArrRedactor[i].width &&
+                        mouseY > this.y + this.objArrRedactor[i].y && 
+                        mouseY < this.y + this.objArrRedactor[i].y +this.objArrRedactor[i].height )
+                    {
+                        if (this.objArrRedactor[i].type!='button')
+                        {
+                            this.select.num = i;
+                            this.select.type = this.objArrRedactor[i].type;
+                            this.select.name = this.objArrRedactor[i].name;
+                            this.select.nameImage = this.objArrRedactor[i].nameImage;
+                            if (this.select.type=='panzer')
+                            {
+                                this.select.typePanzer = this.objArrRedactor[i].typePanzer;
+                                this.select.command = this.objArrRedactor[i].command;
+                            }
+                            else
+                            {
+                                this.select.typePanzer =null;
+                                this.select.command = null;
+                            }
+                        }
+                        else if (this.objArrRedactor[i].type=='button' &&
+                                this.objArrRedactor[i].name=='menu')
+                        {
+                            menuRedactor.start();
+                        }
+
+                        console.log(this.select);
+                    }
+                }
+            }
            // resetMouseLeft();
             console.log('listBackStep');
             console.log(listBackStep);
@@ -473,9 +655,22 @@ function Interface()// класс интерфейса внизу экрана
             {
                 this.textLabel=soundOn==true?'Выключить звук':'Включить звук';
             }
+            if (mouseIn == 'wall') this.textLabel='Выбрать стену';
+            if (mouseIn == 'water') this.textLabel='Выбрать воду';
+            if (mouseIn == 'panzer11') this.textLabel='Выбрать легкий танк команды зеленных';
+            if (mouseIn == 'panzer12') this.textLabel='Выбрать средний танк команды зеленных';
+            if (mouseIn == 'panzer13') this.textLabel='Выбрать тяжелый танк команды зеленных';
+            if (mouseIn == 'panzer21') this.textLabel='Выбрать легкий танк команды красных';
+            if (mouseIn == 'panzer22') this.textLabel='Выбрать средний танк команды красных';
+            if (mouseIn == 'panzer23') this.textLabel='Выбрать тежылый танк команды красных';
+            if (mouseIn == 'delete') this.textLabel='Удаление';
+            if (mouseIn == 'menu') this.textLabel='Меню';
+            
+
             if (mouseIn == 'none') this.textLabel='';
         }
         this.calcPower();
+        
 
     }
 
@@ -632,9 +827,18 @@ window.addEventListener('load', function () {
     //setInterval(drawAll, 6);
     setInterval(function()  {
         if (mainMenu.being==false && windowLevel.being==false &&
-            settings.being==false) // если не открыты мени и окно выбора уровней
+            settings.being==false ) // если не открыты мени и окно выбора уровней
         {
-            update();// основной цикл игры
+            if ( redactorMode==false)
+            {
+                update();// основной цикл игры
+            }
+            else
+            {
+               if (menuRedactor.being==false) updateRedactor();
+              //  console.log(menuRedactor.being);
+            }
+
         }
         drawAll();
     },16);
@@ -809,10 +1013,11 @@ function create()
     }
     mainMenu = new MainMenu();
     mainMenu.start();
+    menuRedactor = new MenuRedactor();
     windowLevel = new WindowLevel();
     searchRoute = new SearchRoute();
     searchRoute.initMap(map.width/mapSize,map.height/mapSize)
-    createRandomMap(100,18);
+   // createRandomMap(100,18);
     bullets = new Bullets();
     interface = new Interface();
     bigText = new BigText();
@@ -848,7 +1053,7 @@ function drawAll()// нарисовать все
     }
    
     drawWaveRoute(context);
-    interface.draw();
+    
     for (let i = 0; i < blockageArr.length;i++)
     {
         blockageArr[i].draw(context,camera,1);
@@ -857,29 +1062,19 @@ function drawAll()// нарисовать все
     for (let i = 0; i < panzerArr.length;i++)
     {
         panzerArr[i].draw(context,camera,1);
-        if (panzerArr[i].being==true)   
-        {
-            drawLineArr(panzerArr[i],"red")
-            //context.fillStyle= 'red';
-            //context.fillRect(panzerArr[i].x, panzerArr[i].y - 7, panzerArr[i].width,4);
-            //context.fillStyle= 'green';
-            //context.fillRect(panzerArr[i].x, panzerArr[i].y - 7,
-            //                panzerArr[i].width*panzerArr[i].HP/panzerArr[i].maxHP,4);
-            //context.beginPath();
-            //context.font = "25px serif";
-            //context.fillStyle = 'white';
-            //let x = panzerArr[i].x;
-            //let y = panzerArr[i].y;
-            //context.fillText(i+'', x+mapSize/2-camera.x-14 , y+mapSize/2-camera.y+6)
-            //context.stroke();
+        //if (panzerArr[i].being==true)   
+        //{
+        //    drawLineArr(panzerArr[i],"red")
+  
 
-        };
+        //};
     }
+    //for (let i = 0; i < blockageArr.length; i++)
+    //{
+    //    drawLineArr(blockageArr[i])
+    //}
     bullets.drawBullets(context);
-    for (let i = 0; i < blockageArr.length; i++)
-    {
-        drawLineArr(blockageArr[i])
-    }
+ 
 
 
     if (numSelectPanzer!=null &&panzerArr[numSelectPanzer].moving==false)
@@ -896,6 +1091,7 @@ function drawAll()// нарисовать все
     }   
    // drawDataII(context);
    // drawVisibleAttackLine(context);
+    interface.draw();
     if (autoGame==true)
     {
         context.beginPath();
@@ -909,18 +1105,69 @@ function drawAll()// нарисовать все
     {
         if (panzerArr[i].being==true)   
         {
-            drawLineArr(panzerArr[i],"red")
-            context.fillStyle= 'red';
-            context.fillRect(panzerArr[i].x, panzerArr[i].y - 7, panzerArr[i].width,4);
-            context.fillStyle= 'green';
-            context.fillRect(panzerArr[i].x, panzerArr[i].y - 7,
-                            panzerArr[i].width*panzerArr[i].HP/panzerArr[i].maxHP,4);
+            //drawLineArr(panzerArr[i],"red")
+            let addY = 0;
+            if (panzerArr[i].yMap==0)
+            {
+                addY = panzerArr[i].height + 7+3;
+            }
+            if (panzerArr[i].HP>0)
+            {
+                context.fillStyle= 'red';
+                context.fillRect(panzerArr[i].x, panzerArr[i].y - 7+addY, panzerArr[i].width,4);
+                context.fillStyle= 'green';
+                context.fillRect(panzerArr[i].x, panzerArr[i].y - 7+addY,
+                                panzerArr[i].width*panzerArr[i].HP/panzerArr[i].maxHP,4);
+            }
         }
+    }
+    if (redactorMode==true )
+    {
+        if (menuRedactor.being==true)
+        {
+            menuRedactor.draw();
+        }
+        let select = interface.select;
+        let xMap = Math.trunc(mouseX / mapSize);
+        let yMap = Math.trunc(mouseY / mapSize);
+        if (mouseY < interface.y && menuRedactor.being==false)
+        {
+            if (checkPressKey('Delete')==true || select.type=="delete" )
+            {
+                drawSprite(context,imageArr.get('delete'),xMap*mapSize+10,yMap*mapSize+10,camera,1)
+            }
+            else
+            {
+                if (select.type=="blockage")
+                {
+                    drawSprite(context,imageArr.get(select.nameImage),xMap*mapSize,yMap*mapSize,camera,1)
+                }
+                else if (select.type=="panzer")
+                {
+                    let x = xMap * mapSize + mapSize / 2 - panzerOption[select.typePanzer].width / 2;
+                    let y = yMap * mapSize + mapSize / 2 - panzerOption[select.typePanzer].height / 2;
+                    drawPanzer(x, y, select.typePanzer, select.command);
+                }
+                //else if (select.type=="delete")
+                {
+             //       drawSprite(context,imageArr.get('delete'),xMap*mapSize+10,yMap*mapSize+10,camera,1)
+                }
+            }
+        }
+       
     }
     bigText.draw();
     burst.draw();
     settings.draw();
    
+}
+function drawPanzer(x,y,type,command)
+{
+    let panzer = new Panzer(command,type,0,0);
+    panzer.x = x;
+    panzer.y = y;
+    panzer.being = true;
+    panzer.draw (context,camera,1);
 }
 function drawVisibleAttackLine(context)
 {
@@ -1028,10 +1275,12 @@ function drawWaveRoute(context)// нарисовать волну для пои�
             else 
             {
                 if (numSelectPanzer!=null && panzerArr[numSelectPanzer].moving==false &&
+                    panzerArr[numSelectPanzer].command==0 &&
                     panzerArr[numSelectPanzer].attack==false &&
                     panzerArr[numSelectPanzer].attackThrow==false &&
                     panzerArr[numSelectPanzer].xMap!=searchRoute.xFinish && 
-                    panzerArr[numSelectPanzer].yMap!=searchRoute.yFinish) 
+                    panzerArr[numSelectPanzer].yMap!=searchRoute.yFinish 
+                    ) 
                 {
                     drawPointRoute(context, x, y, dist, 'blue');
                 }
@@ -1072,11 +1321,11 @@ function drawPointRoute(context,x,y,dist,color)// нарисовать точк�
 	        context.strokeStyle = 'blue';
 	        context.stroke();
 
-            context.beginPath();
-            context.font = "18px serif";
-            context.fillStyle = 'red';
-            context.fillText(dist+'', x*mapSize+mapSize/2-camera.x-4 , y*mapSize+mapSize/2-camera.y+6)
-            context.stroke();
+            //context.beginPath();
+            //context.font = "18px serif";
+            //context.fillStyle = 'red';
+            //context.fillText(dist+'', x*mapSize+mapSize/2-camera.x-4 , y*mapSize+mapSize/2-camera.y+6)
+            //context.stroke();
 }
 function saveStepData(arr,flagCommand=true)
 {
@@ -1107,6 +1356,66 @@ function deleteListBackStep()
     {
         this.listBackStep.splice(0, 1);
     }
+}
+function updateRedactor ()
+{
+    interface.update();
+    let select = interface.select;
+    if (mouseLeftPress==true)
+    {
+        if (checkObjInCell(Math.trunc(mouseX/mapSize),Math.trunc(mouseY/mapSize))==false&&
+            mouseY<interface.y)
+        {
+           if (select.type=='blockage')
+           {
+                let type = null;
+                if (select.name=='wall') type = 0;
+                if (select.name=='water') type = 1;
+                var blockage = new Blockage(type, Math.trunc(mouseX / mapSize),Math.trunc( mouseY / mapSize));
+                // panzer.draw(context,camera,1);
+                blockage.lineArr=calcLineArr(blockage);
+                blockageArr.push(blockage);
+           }
+           else if (select.type=='panzer')
+           {
+                var panzer = new Panzer(select.command,select.typePanzer, Math.trunc(mouseX / mapSize),
+                                        Math.trunc( mouseY / mapSize));
+                panzer.being = true;
+                // panzer.draw(context,camera,1);
+                
+                panzerArr.push(panzer);
+                console.log('NEW PANZER');
+                let len = panzerArr.length - 1;
+                panzerArr[len].lineArr=calcLineArr(panzerArr[len],'panzer',len);
+                updateImUnderGunPanzer();
+            }
+            else if (select.type=='panzer')
+            {
+           
+
+            }
+
+        }  
+        if (checkPressKey('Delete')==true || select.type=='delete')
+        {
+            let objUnderMouse = calcUnderMouseObj();
+            if (objUnderMouse.type=='blockage')
+            {  
+                blockageArr.splice(objUnderMouse.numInArr,1);
+            }
+            if (objUnderMouse.type=='panzer')
+            {  
+                if (numSelectPanzer!=objUnderMouse.numInArr)
+                {
+                    panzerArr.splice(objUnderMouse.numInArr,1);
+                }
+           
+            }
+        }
+    }
+        
+ 
+   
 }
 function update()// основной цикл игры
 {
@@ -1173,13 +1482,25 @@ function update()// основной цикл игры
                 }
              
                 // если кликнули на не выбранный танк
-                if (checkInObj(panzerArr[i],mouseX,mouseY)==true && panzerArr[i].command==0 &&
+                if ((checkInObj(panzerArr[i],mouseX,mouseY)==true && panzerArr[i].command==0 &&
                     movePanzerGreen==false && flagOldMouse==false)
+                    )
                 {
                     if (numSelectPanzer==null)  saveStepData(panzerArr);
                     updateMapSearchRoute();
                     searchRoute.spreadingWave(panzerArr[i].xMap,panzerArr[i].yMap,panzerArr[i].speed); 
-                    numSelectPanzer = i;
+                    if (saveSelect.numPanz!=null && saveSelect.flag==true && numCommandStep==0)
+                    {
+                        numSelectPanzer = saveSelect.numPanz;
+                    }
+                    else
+                    {                    
+                        numSelectPanzer = i;
+                        saveSelect.numPanz = numSelectPanzer;
+                    }
+                    console.log(saveSelect);
+                    saveSelect.flag = false;
+                        
                     numCommandStep = 0;
                     updateImUnderGunPanzer();
                     panzerArr[i].attackThrow = false;
@@ -1268,21 +1589,55 @@ function update()// основной цикл игры
             if (speedMoveCamera.x == 0 && speedMoveCamera.y == 0) flagMoveCamera = false;
         }
     }
+    for (let i = 0; i < panzerArr.length;i++)
+    {
+        if (numSelectPanzer==i)
+        {
+            panzerArr[i].imSelect = true;
+        }
+        else
+        {
+            panzerArr[i].imSelect = false; 
+        }
+    }
+    if (saveSelect.numPanz!=null && saveSelect.flag==true && numCommandStep==0)
+    {
+        if (numSelectPanzer==null)  saveStepData(panzerArr);
+        updateMapSearchRoute();
+       // searchRoute.spreadingWave(panzerArr[i].xMap,panzerArr[i].yMap,panzerArr[i].speed); 
+      //  if (saveSelect.numPanz!=null && saveSelect.flag==true && numCommandStep==0)
+        {
+            numSelectPanzer = saveSelect.numPanz;
+        }
+        searchRoute.spreadingWave(panzerArr[numSelectPanzer].xMap,panzerArr[numSelectPanzer].yMap,
+                                    panzerArr[numSelectPanzer].speed)
+        //else
+        //{                    
+        //    numSelectPanzer = i;
+        //    saveSelect.numPanz = numSelectPanzer;
+        //}
+        console.log(saveSelect);
+        saveSelect.flag = false;
+                        
+        numCommandStep = 0;
+        updateImUnderGunPanzer();
+        panzerArr[numSelectPanzer].attackThrow = false;
+    }
     if (stepCommand[numCommandStep]!=null && stepCommand[numCommandStep].numPanz!=null )
     {
         if(stepCommand[numCommandStep].complete==2 )
         {
             stepCommand[numCommandStep].complete = 3;
-          
-                let numPanz = numSelectPanzer;// stepCommand[numCommandStep].numPanz;
-                let numPAtc = stepCommand[numCommandStep].numPanzAttack;
-                if (stepCommand[numCommandStep].numPanzAttack!=undefined && panzerArr[numPanz].attackThrow==false)
-                {
-                    panzerArr[numPanz].attack = true;
-                //    alert(54);
-                    panzerArr[numPanz].angleAim = angleIm(panzerArr[numPanz].centrX, panzerArr[numPanz].centrY, 
-                                                                panzerArr[numPAtc].centrX, panzerArr[numPAtc].centrY);
-                }
+            if (numCommandStep==1)saveSelect.flag = true;
+            let numPanz = numSelectPanzer;// stepCommand[numCommandStep].numPanz;
+            let numPAtc = stepCommand[numCommandStep].numPanzAttack;
+            if (stepCommand[numCommandStep].numPanzAttack!=undefined && panzerArr[numPanz].attackThrow==false)
+            {
+                panzerArr[numPanz].attack = true;
+            //    alert(54);
+                panzerArr[numPanz].angleAim = angleIm(panzerArr[numPanz].centrX, panzerArr[numPanz].centrY, 
+                                                            panzerArr[numPAtc].centrX, panzerArr[numPAtc].centrY);
+            }
         //    }
         //    else
         //    {
@@ -1343,6 +1698,7 @@ function update()// основной цикл игры
                     if ( stepCommand[numCommandStep].attack==false)
                     {
                         stepCommand[numCommandStep].complete = 3;
+                         if (numCommandStep==1) saveSelect.flag = true;
                         //if (numCommandStep==1 /*&& autogame==false*/) 
                        // saveStepData(panzerArr);
                         nextStepCommand();
@@ -1387,11 +1743,7 @@ function update()// основной цикл игры
             }
         }
     }
-    if (keyUpDuration('F2',500)==true)
-    {
-        autoGame = !autoGame;
-        if (autoGame==true) calcStepII(numCommandStep);
-    }
+
     burst.end(function () {
         if (numPanzerDead!=null)
         {
@@ -1416,7 +1768,7 @@ function update()// основной цикл игры
     bullets.update();
     collisioinBulets();
     interface.update();
-    redactGameMap();
+   // ControllKeyBoard();
     bigText.control();
     burst.update();
 }
@@ -1540,6 +1892,7 @@ function collisioinBulets()// столкновение пуль с обьект�
                         //panzerArr[j].being = false;
                         burst.start(panzerArr[j].centrX, panzerArr[j].centrY);
                         numPanzerDead = j;
+                        if (saveSelect.numPanz == j) saveSelect.numPanz = null;
                         if (soundOn==true)  audio.play("burstPanzer");
                         //updateMapSearchRoute();
                         //calcQuantityPanz();
@@ -1998,9 +2351,14 @@ function updateMapSearchRoute()// обновить карту для поиск�
  //   searchRoute.consoleMap();
 }
 
-function redactGameMap()// редактировать карту
+function ControllKeyBoard()// редактировать карту
 {
 
+    if (keyUpDuration('F2',500)==true)
+    {
+        autoGame = !autoGame;
+        if (autoGame==true) calcStepII(numCommandStep);
+    }
     if (checkPressKey('Delete')==true || checkPressKey('KeyD')==true)
     {
         let objUnderMouse = calcUnderMouseObj();
@@ -2147,6 +2505,7 @@ function loadGameMap(numMap,dataRAM=null)
     searchRoute.deleteData();
     deleteListBackStep();
     numSelectPanzer = null;
+    numCommandStep = 0;
     let data = dataRAM==null?mapArr[numMap]:JSON.parse(dataRAM);
     for (let i = 0; i < data.panzer.length;i++)
     {

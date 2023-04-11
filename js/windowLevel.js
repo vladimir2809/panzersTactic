@@ -52,16 +52,16 @@
             }
             count++;
         }
-        if (this.levelSelect!=null)
-        {
+        //if (this.levelSelect!=null)
+        //{
 
-            context.fillStyle='rgb(255,255,0)';
-            let strCount = this.levelSelect+'';
-            context.font = '30px Arial';
-            //let widthTextCount = context.measureText(strCount).width;
-            context.fillText(strCount,x,y-50) ;
+        //    context.fillStyle='rgb(255,255,0)';
+        //    let strCount = this.levelSelect+'';
+        //    context.font = '30px Arial';
+        //    //let widthTextCount = context.measureText(strCount).width;
+        //    context.fillText(strCount,x,y-50) ;
 
-        }
+        //}
     }
     this.update = function()
     {
