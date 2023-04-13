@@ -629,6 +629,12 @@ function Interface()// класс интерфейса внизу экрана
                                 this.select.command = null;
                             }
                         }
+                        else if (this.objArrRedactor[i].type=='button' &&
+                                this.objArrRedactor[i].name=='menu')
+                        {
+                            menuRedactor.start();
+                        }
+
                         console.log(this.select);
                     }
                 }
@@ -829,7 +835,8 @@ window.addEventListener('load', function () {
             }
             else
             {
-                updateRedactor();
+               if (menuRedactor.being==false) updateRedactor();
+              //  console.log(menuRedactor.being);
             }
 
         }
@@ -1006,6 +1013,7 @@ function create()
     }
     mainMenu = new MainMenu();
     mainMenu.start();
+    menuRedactor = new MenuRedactor();
     windowLevel = new WindowLevel();
     searchRoute = new SearchRoute();
     searchRoute.initMap(map.width/mapSize,map.height/mapSize)
@@ -1103,19 +1111,26 @@ function drawAll()// нарисовать все
             {
                 addY = panzerArr[i].height + 7+3;
             }
-            context.fillStyle= 'red';
-            context.fillRect(panzerArr[i].x, panzerArr[i].y - 7+addY, panzerArr[i].width,4);
-            context.fillStyle= 'green';
-            context.fillRect(panzerArr[i].x, panzerArr[i].y - 7+addY,
-                            panzerArr[i].width*panzerArr[i].HP/panzerArr[i].maxHP,4);
+            if (panzerArr[i].HP>0)
+            {
+                context.fillStyle= 'red';
+                context.fillRect(panzerArr[i].x, panzerArr[i].y - 7+addY, panzerArr[i].width,4);
+                context.fillStyle= 'green';
+                context.fillRect(panzerArr[i].x, panzerArr[i].y - 7+addY,
+                                panzerArr[i].width*panzerArr[i].HP/panzerArr[i].maxHP,4);
+            }
         }
     }
-    if (redactorMode==true)
+    if (redactorMode==true )
     {
+        if (menuRedactor.being==true)
+        {
+            menuRedactor.draw();
+        }
         let select = interface.select;
         let xMap = Math.trunc(mouseX / mapSize);
         let yMap = Math.trunc(mouseY / mapSize);
-        if (mouseY < interface.y)
+        if (mouseY < interface.y && menuRedactor.being==false)
         {
             if (checkPressKey('Delete')==true || select.type=="delete" )
             {
@@ -1373,6 +1388,11 @@ function updateRedactor ()
                 let len = panzerArr.length - 1;
                 panzerArr[len].lineArr=calcLineArr(panzerArr[len],'panzer',len);
                 updateImUnderGunPanzer();
+            }
+            else if (select.type=='panzer')
+            {
+           
+
             }
 
         }  

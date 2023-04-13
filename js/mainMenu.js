@@ -8,13 +8,16 @@
     this.heightOneItem = 80;
     this.dist = 15;
     this.listSelectMain = redactorOpen==false?['Играть', 'Авторы'/*, 'Помошь'*/, 'Выход']:
-                                        ['Играть','Загрузить','Редактор', 'Авторы'/*, 'Помошь'*/, 'Выход'];
+                                        ['Играть',/*'Загрузить',*/'Редактор', 'Авторы'/*, 'Помошь'*/, 'Выход'];
     this.listSelectNewGame = ['Да', 'Нет'];
     this.selectHower = null;
+    this.numSelectHower = null;
     this.authorScreen = new AuthorScreen();
     this.start=function()
     {
         //if (this.being==true)
+        while (blockageArr.length > 0) blockageArr.splice(0,1);
+        while (panzerArr.length > 0) panzerArr.splice(0,1);
         this.being = true;
         if (checkDataStorage()==true)
         {
@@ -53,7 +56,7 @@
         {
             let widthText = context.measureText(this.listSelectMain[i]).width;
             context.save();
-            context.strokeStyle = this.selectHower == i ? 'red' : 'blue';
+            context.strokeStyle = this.numSelectHower == i ? 'red' : 'blue';
             context.lineWidth = 3;
             context.strokeRect(x,y+i*(this.heightOneItem+this.dist),this.widthOneItem,this.heightOneItem);
             let addX = this.widthOneItem / 2 - widthText / 2;
@@ -62,32 +65,6 @@
             context.restore();
         }
         this.authorScreen.draw();
-        //context.fillText("Играть.",20,y+80);
-        //context.fillText("Продолжить.",20,y+120);
-        //context.fillText("Помошь.",20,y+160);
-        //context.fillText("Выход.",20,y+200);
-
-
-        //context.fillStyle='rgb(210,210,210)';
-        //context.fillRect(0,0,camera.width,camera.height);// очистка экрана
-        //context.font = "58px Arial";
-        //context.fillStyle='#FF8800';
-        //context.fillText("PANZER-ZERO",165,60);
-        //context.font = "38px Arial";
-        //context.fillStyle='#3333FF';
-        //let y=100;
-        //context.fillText("WASD - Управление.",20,y+80);
-        //context.fillText("1234 - Выбор оружия.",20,y+120);
-        //context.fillText("Левая кнопка мыши - Стрелять.",20,y+160);
-        //context.fillText("Колёсико мыши - сменить оружие.",20,y+200);
-        //context.fillText("M - Магазин.",20,y+240);
-        //context.fillText("G - Гараж.",20,y+280);
-        //context.fillText("R - Войти в здание или открыть дверь.",20,y+320);
-        //context.fillStyle='rgb(210,10,10)';
-        //context.fillRect(this.button.x,this.button.y,
-        //            this.button.width,this.button.height);
-        //context.fillStyle='rgb(255,255,0)';
-        //context.fillText("ИГРАТЬ",this.button.x+30,this.button.y+32);
     }
     this.update=function()
     {
@@ -95,6 +72,7 @@
         let mY = mouseY;//-mouseOffsetY;
         let x = this.x;
         let y = this.y;
+        this.numSelectHower = null;
         this.selectHower = null;
         for (let i = 0;i<this.listSelectMain.length;i++)
         {
@@ -103,10 +81,12 @@
                 mY<y+i*(this.heightOneItem+this.dist)+ this.heightOneItem)
             {
                 this.selectHower = this.listSelectMain[i];
+                this.numSelectHower = i;
 
             }
 
         }
+        console.log(this.numSelectHower);
         if (mouseLeftClick())
         {
             switch(this.selectHower)
@@ -115,12 +95,14 @@
                 case 'Продолжить': 
                     {
                         this.close();
+                        redactorMode = false;
                         windowLevel.start();
                         
                     }break;
                 case 'Редактор': 
                     {
                         this.close();
+                        numSelectPanzer = null;
                         redactorMode = true;
                         
                     }break;
