@@ -54,6 +54,7 @@ var redactorOpen = true;
 var redactorMode = false;
 var levelGame = 0;// текуший уровень игры
 var dataRAMLevel = null;// уровень в памяти
+var levelBeingRedactor = false;
 var line = { x:null, y:null, x1:null, y1:null, numP:null };// линия для вычесления пересечений
 var audio = null;
 var volumeSound = 0.5;
@@ -842,6 +843,39 @@ window.addEventListener('load', function () {
         }
         drawAll();
     },16);
+    const file = document.getElementById('your-files');
+    file.addEventListener("change", handleFiles);
+    function handleFiles()
+    {
+        var form=document.getElementById('formFile');
+        
+        var fileOne=file.files[0];
+        //console.log(fileOne);
+        //objMap.loadMap(JSON.parse(localStorage.getItem('gameMap')));
+     //   alert(readFile(file));
+        var reader = new FileReader();
+        reader.readAsText(fileOne);
+        reader.onload = function() {
+          //objMap.loadMap(JSON.parse(reader.result));
+            dataRAMLevel = reader.result;//JSON.parse(reader.result);
+            console.log(dataRAMLevel);
+            if (menuRedactor.loadMap!=undefined)
+            {
+                menuRedactor.loadMap = true;
+               // alert(111);
+            }
+        // alert(reader.result);
+        }
+        reader.onerror = function() {
+        
+            alert('ошибка загрузки карты');
+        }
+        //;
+        
+        file.value="";
+        form.style.display='none';
+   //     this.form.reset;
+    }
 
 });
 window.onresize = function()
@@ -1361,6 +1395,7 @@ function updateRedactor ()
 {
     interface.update();
     let select = interface.select;
+    levelBeingRedactor = true;
     if (mouseLeftPress==true)
     {
         if (checkObjInCell(Math.trunc(mouseX/mapSize),Math.trunc(mouseY/mapSize))==false&&
@@ -2350,7 +2385,29 @@ function updateMapSearchRoute()// обновить карту для поиск�
     }
  //   searchRoute.consoleMap();
 }
+function createDataLevel()
+{
+    let dataPanzer = [];
+    let dataBlockage = [];
+    for (let i = 0; i < blockageArr.length;i++)
+    {
+        //if (blockageArr[i].being==true)
+        {
+            dataBlockage.push({xMap:blockageArr[i].xMap,yMap:blockageArr[i].yMap,type:blockageArr[i].type});
+        }
 
+    }
+    for (let i = 0; i < panzerArr.length;i++)
+    {
+        if (panzerArr[i].being==true)
+        {
+            dataPanzer.push({xMap:panzerArr[i].xMap,yMap:panzerArr[i].yMap,
+                    command:panzerArr[i].command,type:panzerArr[i].type});
+        }
+
+    }
+    return JSON.stringify({blockage:dataBlockage,panzer:dataPanzer});
+}
 function ControllKeyBoard()// редактировать карту
 {
 
@@ -2431,29 +2488,7 @@ function ControllKeyBoard()// редактировать карту
             }
         }
     }
-    function createDataLevel()
-    {
-        let dataPanzer = [];
-        let dataBlockage = [];
-        for (let i = 0; i < blockageArr.length;i++)
-        {
-            //if (blockageArr[i].being==true)
-            {
-                dataBlockage.push({xMap:blockageArr[i].xMap,yMap:blockageArr[i].yMap,type:blockageArr[i].type});
-            }
-
-        }
-        for (let i = 0; i < panzerArr.length;i++)
-        {
-            if (panzerArr[i].being==true)
-            {
-                dataPanzer.push({xMap:panzerArr[i].xMap,yMap:panzerArr[i].yMap,
-                        command:panzerArr[i].command,type:panzerArr[i].type});
-            }
-
-        }
-        return JSON.stringify({blockage:dataBlockage,panzer:dataPanzer});
-    }
+   
     if (keyUpDuration('KeyP',500)==true)
     {
         //let data = {};
@@ -2478,7 +2513,7 @@ function ControllKeyBoard()// редактировать карту
         //}
         //data = JSON.stringify({blockage:dataBlockage,panzer:dataPanzer});
         data = createDataLevel();
-        downloadAsFile(data)
+        downloadAsFile(data);
     }
     if (keyUpDuration('KeyL',500)==true)
     {

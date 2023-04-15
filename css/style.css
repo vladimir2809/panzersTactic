@@ -7,3 +7,49 @@ canvas {
     border: 1px solid black;
  
 }
+#formText {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    width: 100px;
+    height: 200px;
+    display: block;
+    margin-left: 4px;
+    border: 1px black solid;
+}
+
+#formText p {
+    font: 12px sans-serif;
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+#formText input.text {
+    width: 80px;
+}
+
+#range {
+    width: 100px;
+}
+
+#buttonForm {
+    margin: 10px 10px;
+}
+
+#formFile {
+    border: 1px black solid;
+    background-color: #AAAAAA;
+    width: 250;
+    height: 100;
+    position: fixed;
+    top: 42%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    display: none;
+    /*    position:absolute;
+    left:auto;
+    top:auto;
+  */
+}

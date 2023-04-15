@@ -36,6 +36,7 @@
        
         colorText:'rgb(255,255,0)',
         text: 'Выйти в главное меню',
+             //levelBeingRedactor
        
 
     }
@@ -56,6 +57,7 @@
     this.start=function()
     {
         this.being = true;
+        this.buttonMainMenu.text = levelBeingRedactor == false ? 'Выйти в главное меню' : 'Выйти в редактор';
         this.timerId=setInterval(function(){
            settings.update(); 
         },30);
@@ -89,9 +91,15 @@
             context.strokeRect(this.buttonMainMenu.x,this.buttonMainMenu.y,
                                 this.buttonMainMenu.width,this.buttonMainMenu.height);
 
-            context.font = "32px serif";
+            //context.font = "32px serif";
+            
+            //context.fillText(this.buttonMainMenu.text,this.buttonMainMenu.x+8,this.buttonMainMenu.y+30);
             context.fillStyle = this.buttonMainMenu.colorText;
-            context.fillText(this.buttonMainMenu.text,this.buttonMainMenu.x+8,this.buttonMainMenu.y+30);
+            let strHeader = this.buttonMainMenu.text;
+            context.font = '32px serif';
+            let widthText = context.measureText(strHeader).width;
+            context.fillText(strHeader,this.buttonMainMenu.x+ this.buttonMainMenu.width / 2 - widthText / 2, 
+                this.buttonMainMenu.y+30);
 
             context.font = "24x serif";
             context.fillStyle = "white";
@@ -117,7 +125,17 @@
             {
                 this.close();
                 autoGame = false;
-                mainMenu.start();
+                if (levelBeingRedactor==false)
+                {
+                    mainMenu.start();
+                }
+                else
+                {
+                    //searchRoute.deleteData();
+                    loadGameMap(0,dataRAMLevel);
+                    redactorMode = true;
+                }
+                
             }
             this.toggle.update(mouseCLick);
             autoStepEnd = this.toggle.valueOn;

@@ -269,10 +269,21 @@ function downloadAsFile(data)
       let a = document.createElement("a");
       let file = new Blob([data], {type: 'application/json'});
       a.href = URL.createObjectURL(file);
-      a.download = "example.txt";
+      a.download = "panzerMap.txt";
       a.click();
-    }
+}
     
+function readFile(object)
+{
+  var file = object.files[0]
+  var reader = new FileReader()
+  var res;
+  reader.onload = function() {
+    res = reader.result;
+  }
+  reader.readAsText(file);
+  return res;
+}
 
 function getDataGoogleSheets()
 {
