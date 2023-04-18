@@ -8,17 +8,21 @@
     this.heightOneItem = 80;
     this.dist = 15;
     this.listSelectMain = redactorOpen==false?['Играть', 'Авторы'/*, 'Помошь'*/, 'Выход']:
-                                        ['Играть',/*'Загрузить',*/'Редактор', 'Авторы'/*, 'Помошь'*/, 'Выход'];
+                                        ['Играть'/*,'Загрузить'*/,'Редактор', 'Авторы'/*, 'Помошь'*/, 'Выход'];
     this.listSelectNewGame = ['Да', 'Нет'];
     this.selectHower = null;
     this.numSelectHower = null;
     this.authorScreen = new AuthorScreen();
+    this.loadMap = false;
     this.start=function()
     {
         //if (this.being==true)
         while (blockageArr.length > 0) blockageArr.splice(0,1);
         while (panzerArr.length > 0) panzerArr.splice(0,1);
         this.being = true;
+        this.loadMap = false;
+        levelBeingRedactor = false;
+        dataRAMLevel = null;
         if (checkDataStorage()==true)
         {
             this.listSelectMain[0] = 'Продолжить';
@@ -86,7 +90,7 @@
             }
 
         }
-        console.log(this.numSelectHower);
+     //  console.log(this.numSelectHower);
         if (mouseLeftClick())
         {
             switch(this.selectHower)
@@ -99,11 +103,22 @@
                         windowLevel.start();
                         
                     }break;
+                case 'Загрузить':
+                    {
+                        var formFile=document.getElementById("formFile");
+                        formFile.style.display="block";
+                        redactorMode = false;
+                        break;
+                    }
+                
                 case 'Редактор': 
                     {
                         this.close();
-                        numSelectPanzer = null;
-                        redactorMode = true;
+                       // numSelectPanzer = null;
+                        exitInRedactor();
+                        //interface.select.type = null;
+                        //interface.select.num = null;
+                        //redactorMode = true;
                         
                     }break;
                 case 'Авторы': 
@@ -115,18 +130,14 @@
                 case 'Выход': window.close(); break;
             }
         }
-        //if (mouseLeftClick())
-        //{   //alert();
-        //    if (mX>this.button.x && mX<this.button.x+this.button.width &&
-        //            mY>this.button.y && mY<this.button.y+this.button.height
-        //       )
-        //    {
-                
-        //        this.being=false;
-        //        pause=false;
-        //        clearInterval(this.timerId);
-        //    }
-        //}
+        if (this.loadMap==false && dataRAMLevel!=null)
+        {
+            this.loadMap = true;
+            loadGameMap(0,dataRAMLevel);
+            //alert(222);
+            this.close();
+        }
+
     }    
 }
 function AuthorScreen()

@@ -32,6 +32,7 @@ var bullets = null;
 var numSelectPanzer = null;// номер выбраного танка
 var numCommandStep = 0;
 var autoGame = false;
+var pause = false;
 var speedMotionPanz = 10;
 var autoStepEnd = false;
 var movePanzerGreen = false;// танк двигался в этом ходу
@@ -54,6 +55,7 @@ var redactorOpen = true;
 var redactorMode = false;
 var levelGame = 0;// текуший уровень игры
 var dataRAMLevel = null;// уровень в памяти
+var levelBeingRedactor = false;
 var line = { x:null, y:null, x1:null, y1:null, numP:null };// линия для вычесления пересечений
 var audio = null;
 var volumeSound = 0.5;
@@ -720,21 +722,48 @@ function BigText()// класс большой текст
                     case 1://  уровень пройден
                     {
                         //levelGame++;
-                        if (checkElemArr(levelGameOpen,levelGame + 2)==false)
-                        {
-                            levelGameOpen.push(levelGame + 2);
+                        if (levelBeingRedactor==false)
+                        {    
+                            if (checkElemArr(levelGameOpen,levelGame + 2)==false)
+                            {
+                                levelGameOpen.push(levelGame + 2);
                             
+                            }
+                            windowLevel.start();
+                            autoGame = false;
+                            saveDataStorage();
                         }
-                        windowLevel.start();
-                        autoGame = false;
-                        saveDataStorage();
+                        else
+                        {  
+                          //  redactorMode = true;
+                            exitInRedactor();
+                            loadGameMap(0, dataRAMLevel);
+                       
+                        }
                         
                     }
                     break;
                     case 2:// вы проиграли
                     {
-                        windowLevel.start();
-                        autoGame = false;
+                        if (levelBeingRedactor==false)
+                        {
+                            windowLevel.start();
+                            autoGame = false;
+                        }
+                        else
+                        {
+                            //redactorMode = true;
+                            exitInRedactor();
+                            loadGameMap(0, dataRAMLevel);
+                            
+                        }
+
+                    }
+                    break;
+                    case 3:// у красных нет хода
+                    {
+                        pause = false;
+
                     }
                     break;
                 }
@@ -842,6 +871,39 @@ window.addEventListener('load', function () {
         }
         drawAll();
     },16);
+    const file = document.getElementById('your-files');
+    file.addEventListener("change", handleFiles);
+    function handleFiles()
+    {
+        var form=document.getElementById('formFile');
+        
+        var fileOne=file.files[0];
+        //console.log(fileOne);
+        //objMap.loadMap(JSON.parse(localStorage.getItem('gameMap')));
+     //   alert(readFile(file));
+        var reader = new FileReader();
+        reader.readAsText(fileOne);
+        reader.onload = function() {
+          //objMap.loadMap(JSON.parse(reader.result));
+            dataRAMLevel = reader.result;//JSON.parse(reader.result);
+            console.log(dataRAMLevel);
+            if (menuRedactor.loadMap!=undefined)
+            {
+                menuRedactor.loadMap = true;
+               // alert(111);
+            }
+        // alert(reader.result);
+        }
+        reader.onerror = function() {
+        
+            alert('ошибка загрузки карты');
+        }
+        //;
+        
+        file.value="";
+        form.style.display='none';
+   //     this.form.reset;
+    }
 
 });
 window.onresize = function()
@@ -1361,6 +1423,7 @@ function updateRedactor ()
 {
     interface.update();
     let select = interface.select;
+    levelBeingRedactor = true;
     if (mouseLeftPress==true)
     {
         if (checkObjInCell(Math.trunc(mouseX/mapSize),Math.trunc(mouseY/mapSize))==false&&
@@ -1422,104 +1485,139 @@ function update()// основной цикл игры
     showDownCamera = 0.5;
     if (mouseLeftPress==true)// если нажата левая кнопка мыши
     {
-        if (numSelectPanzer!=null)// если есть выбранный танк
+        if (pause == false)
         {
-            for (let i = 0; i < searchRoute.wavePointArr.length;i++)
+
+        
+            if (numSelectPanzer!=null)// если есть выбранный танк
             {
-                xPoint = searchRoute.wavePointArr[i].xMap;
-                yPoint = searchRoute.wavePointArr[i].yMap;
-                numPanz = numSelectPanzer;
-                // если не кликнули на выбранный танк
-                if ((mouseX>panzerArr[numPanz].xMap*mapSize && mouseX<panzerArr[numPanz].xMap*mapSize+mapSize &&
-                    mouseY>panzerArr[numPanz].yMap*mapSize && mouseY<panzerArr[numPanz].yMap*mapSize+mapSize)==false)
-                { 
-                    // если кликнули на точку пути выбранног танка
-                    if (mouseX>xPoint*mapSize && mouseX<xPoint*mapSize+mapSize &&
-                        mouseY>yPoint*mapSize && mouseY<yPoint*mapSize+mapSize && 
-                        movePanzerGreen==false)
-                    {
-                     //   saveStepData(panzerArr);
-                        let route= searchRoute.getRoute(panzerArr[numPanz].xMap,panzerArr[numPanz].yMap,
-                                    panzerArr[numPanz].speed, xPoint,yPoint);
-                        panzerArr[numPanz].startMovingByRoute(route);
-                        movePanzerGreen = true;
-                        //numSelectPanzer = null;
-                        break;
+                for (let i = 0; i < searchRoute.wavePointArr.length;i++)
+                {
+                    xPoint = searchRoute.wavePointArr[i].xMap;
+                    yPoint = searchRoute.wavePointArr[i].yMap;
+                    numPanz = numSelectPanzer;
+                    // если не кликнули на выбранный танк
+                    if ((mouseX>panzerArr[numPanz].xMap*mapSize && mouseX<panzerArr[numPanz].xMap*mapSize+mapSize &&
+                        mouseY>panzerArr[numPanz].yMap*mapSize && mouseY<panzerArr[numPanz].yMap*mapSize+mapSize)==false)
+                    { 
+                        // если кликнули на точку пути выбранног танка
+                        if (mouseX>xPoint*mapSize && mouseX<xPoint*mapSize+mapSize &&
+                            mouseY>yPoint*mapSize && mouseY<yPoint*mapSize+mapSize && 
+                            movePanzerGreen==false)
+                        {
+                         //   saveStepData(panzerArr);
+                            let route= searchRoute.getRoute(panzerArr[numPanz].xMap,panzerArr[numPanz].yMap,
+                                        panzerArr[numPanz].speed, xPoint,yPoint);
+                            panzerArr[numPanz].startMovingByRoute(route);
+                            movePanzerGreen = true;
+                            //numSelectPanzer = null;
+                            break;
+                        }
                     }
                 }
             }
-        }
-        for (let i = 0; i < panzerArr.length;i++)
-        {
-            if (panzerArr[i].being==true)
+            for (let i = 0; i < panzerArr.length;i++)
             {
-                // если выбранн танк для атаки
-                if (numSelectPanzer!=null)
+                if (panzerArr[i].being==true)
                 {
-                    numPanz = numSelectPanzer;
+                    // если выбранн танк для атаки
+                    if (numSelectPanzer!=null)
+                    {
+                        numPanz = numSelectPanzer;
                   
-                    //let flag = false;
-                    //for (let j = 0; j < panzerArr.length;j++) 
-                    //{
-                    //    if (checkInObj(panzerArr[j],mouseX,mouseY) && i==j)// если мышь в танке для атаки
-                    //    {
-                    //        flag = true;
-                    //    }
-                    //}
-                    if (checkInObj(panzerArr[i],mouseX,mouseY)==true && panzerArr[i].command==1 &&
-                        i!=numSelectPanzer && panzerArr[numPanz].attack == false /*&& flag==true*/ &&
-                        panzerArr[numPanz].attackThrow==false)
-                    {
-                       //// panzerArr[numPanz].attack = true;
-                       // panzerArr[numPanz].angleAim = angleIm(panzerArr[numPanz].centrX, panzerArr[numPanz].centrY, 
-                       //                                         panzerArr[i].centrX, panzerArr[i].centrY);
-                        calcStepII(0,numPanz, i);
-                        //stepCommand[0].complete = 0;
-                        autoAttack = true;
+                        //let flag = false;
+                        //for (let j = 0; j < panzerArr.length;j++) 
+                        //{
+                        //    if (checkInObj(panzerArr[j],mouseX,mouseY) && i==j)// если мышь в танке для атаки
+                        //    {
+                        //        flag = true;
+                        //    }
+                        //}
+                        if (checkInObj(panzerArr[i],mouseX,mouseY)==true && panzerArr[i].command==1 &&
+                            i!=numSelectPanzer && panzerArr[numPanz].attack == false /*&& flag==true*/ &&
+                            panzerArr[numPanz].attackThrow==false /*&& movePanzerGreen==false*/)
+                        {
+                            if(movePanzerGreen==true)
+                            {
+
+                                if (visiblePanzerToPanzer(numPanz,i)==true)
+                                {
+
+                            
+                                    panzerArr[numPanz].attack = true;
+                                    panzerArr[numPanz].angleAim = angleIm(panzerArr[numPanz].centrX,
+                                                                    panzerArr[numPanz].centrY, 
+                                                                    panzerArr[i].centrX, panzerArr[i].centrY);
+                                }
+                            }
+                            else
+                            {
+                                calcStepII(0,numPanz, i);
+                                if (numCommandStep==0 && stepCommand[numCommandStep]==null)
+                                {
+                                    //nextStepCommand();
+                                    bigText.init('Сюда нет пути!', 'red', 150, null);
+                                    searchRoute.deleteData();
+                                    searchRoute.spreadingWave(panzerArr[numPanz].xMap,panzerArr[numPanz].yMap,
+                                                    panzerArr[numPanz].speed); 
+                                    // autoAttack = false; 
+                                    //bigText.start();
+                                }
+                                else
+                                {
+                          
+                                } 
+                                autoAttack = true;
+                            }
+                       
+                            //stepCommand[0].complete = 0;
+                      
                         
-                    }
+                        }
                
-                }
+                    }
              
-                // если кликнули на не выбранный танк
-                if ((checkInObj(panzerArr[i],mouseX,mouseY)==true && panzerArr[i].command==0 &&
-                    movePanzerGreen==false && flagOldMouse==false)
-                    )
-                {
-                    if (numSelectPanzer==null)  saveStepData(panzerArr);
-                    updateMapSearchRoute();
-                    searchRoute.spreadingWave(panzerArr[i].xMap,panzerArr[i].yMap,panzerArr[i].speed); 
-                    if (saveSelect.numPanz!=null && saveSelect.flag==true && numCommandStep==0)
+                    // если кликнули на не выбранный танк
+                    if ((checkInObj(panzerArr[i],mouseX,mouseY)==true && panzerArr[i].command==0 &&
+                        movePanzerGreen==false && flagOldMouse==false)
+                        )
                     {
-                        numSelectPanzer = saveSelect.numPanz;
-                    }
-                    else
-                    {                    
-                        numSelectPanzer = i;
-                        saveSelect.numPanz = numSelectPanzer;
-                    }
-                    console.log(saveSelect);
-                    saveSelect.flag = false;
+                        if (numSelectPanzer==null)  saveStepData(panzerArr);
+                        updateMapSearchRoute();
+                        searchRoute.spreadingWave(panzerArr[i].xMap,panzerArr[i].yMap,panzerArr[i].speed); 
+                        if (saveSelect.numPanz!=null && saveSelect.flag==true && numCommandStep==0)
+                        {
+                            numSelectPanzer = saveSelect.numPanz;
+                        }
+                        else
+                        {                    
+                            numSelectPanzer = i;
+                            saveSelect.numPanz = numSelectPanzer;
+                        }
+                        console.log(saveSelect);
+                        saveSelect.flag = false;
                         
-                    numCommandStep = 0;
-                    updateImUnderGunPanzer();
-                    panzerArr[i].attackThrow = false;
-                 //   let route= searchRoute.getRoute(panzerArr[i].xMap,panzerArr[i].yMap, 100, 10,10);
-                   // panzerArr[i].startMovingByRoute(route);
-                    //console.log('Route Panzer');
-                    //console.log(route);
+                        numCommandStep = 0;
+                        updateImUnderGunPanzer();
+                        panzerArr[i].attackThrow = false;
+                     //   let route= searchRoute.getRoute(panzerArr[i].xMap,panzerArr[i].yMap, 100, 10,10);
+                       // panzerArr[i].startMovingByRoute(route);
+                        //console.log('Route Panzer');
+                        //console.log(route);
 
 
+                    }
+            
                 }
             
-            }
-            if (numSelectPanzer==i)
-            {
-                panzerArr[i].imSelect = true;
-            }
-            else
-            {
-               panzerArr[i].imSelect = false; 
+                if (numSelectPanzer==i)
+                {
+                    panzerArr[i].imSelect = true;
+                }
+                else
+                {
+                   panzerArr[i].imSelect = false; 
+                }
             }
         }   
 
@@ -1600,6 +1698,7 @@ function update()// основной цикл игры
             panzerArr[i].imSelect = false; 
         }
     }
+    
     if (saveSelect.numPanz!=null && saveSelect.flag==true && numCommandStep==0)
     {
         if (numSelectPanzer==null)  saveStepData(panzerArr);
@@ -1623,6 +1722,21 @@ function update()// основной цикл игры
         updateImUnderGunPanzer();
         panzerArr[numSelectPanzer].attackThrow = false;
     }
+    if (numCommandStep==1 && stepCommand[numCommandStep]==null &&
+        quantityPanzInCommand[0]>0 && quantityPanzInCommand[1]>0)
+    {
+        nextStepCommand();
+        bigText.init('У красных нет хода!', 'red', 150, 3)
+        pause = true;
+        //bigText.start();
+    }
+    //if (numCommandStep==0 && numSelectPanzer!=null && autoAttack==true && stepCommand[numCommandStep]==null)
+    //{
+    //    //nextStepCommand();
+    //    bigText.init('Сюда нет пути!', 'red', 150, null)
+    //   // autoAttack = false; 
+    //    //bigText.start();
+    //}
     if (stepCommand[numCommandStep]!=null && stepCommand[numCommandStep].numPanz!=null )
     {
         if(stepCommand[numCommandStep].complete==2 )
@@ -1925,6 +2039,15 @@ function collisioinBulets()// столкновение пуль с обьект�
 
     }
 }
+function exitInRedactor()
+{
+    numSelectPanzer = null;
+    searchRoute.deleteData();
+    interface.select.type = null;
+    interface.select.num = null;
+   // if (redactorMode==true)loadGameMap(0,dataRAMLevel);
+    redactorMode = true;
+}
 function calcQuantityPanz()
 {
     quantityPanzInCommand[0] = 0;
@@ -1959,7 +2082,7 @@ function calcStepII(numCommand,numPanzStep=null,numPanzForAttack=null)
     var maxValueAtt = 0;
     var ExceptionNumPanz = [];
     let flagVisible = false;
-
+    stepCommand[numCommand] = null;
     function calcNumPanzValueAtt()
     {
         maxValueAtt = 0;
@@ -2238,7 +2361,7 @@ function calcStepII(numCommand,numPanzStep=null,numPanzForAttack=null)
                 step.pointAttack.dist = panzerArr[numPanz].speed;
                 step.complete = 0;
 
-                stepCommand[numCommand] = step;
+                stepCommand[numCommand] = clone(step);
             }
         }
     }
@@ -2350,7 +2473,29 @@ function updateMapSearchRoute()// обновить карту для поиск�
     }
  //   searchRoute.consoleMap();
 }
+function createDataLevel()
+{
+    let dataPanzer = [];
+    let dataBlockage = [];
+    for (let i = 0; i < blockageArr.length;i++)
+    {
+        //if (blockageArr[i].being==true)
+        {
+            dataBlockage.push({xMap:blockageArr[i].xMap,yMap:blockageArr[i].yMap,type:blockageArr[i].type});
+        }
 
+    }
+    for (let i = 0; i < panzerArr.length;i++)
+    {
+        if (panzerArr[i].being==true)
+        {
+            dataPanzer.push({xMap:panzerArr[i].xMap,yMap:panzerArr[i].yMap,
+                    command:panzerArr[i].command,type:panzerArr[i].type});
+        }
+
+    }
+    return JSON.stringify({blockage:dataBlockage,panzer:dataPanzer});
+}
 function ControllKeyBoard()// редактировать карту
 {
 
@@ -2431,29 +2576,7 @@ function ControllKeyBoard()// редактировать карту
             }
         }
     }
-    function createDataLevel()
-    {
-        let dataPanzer = [];
-        let dataBlockage = [];
-        for (let i = 0; i < blockageArr.length;i++)
-        {
-            //if (blockageArr[i].being==true)
-            {
-                dataBlockage.push({xMap:blockageArr[i].xMap,yMap:blockageArr[i].yMap,type:blockageArr[i].type});
-            }
-
-        }
-        for (let i = 0; i < panzerArr.length;i++)
-        {
-            if (panzerArr[i].being==true)
-            {
-                dataPanzer.push({xMap:panzerArr[i].xMap,yMap:panzerArr[i].yMap,
-                        command:panzerArr[i].command,type:panzerArr[i].type});
-            }
-
-        }
-        return JSON.stringify({blockage:dataBlockage,panzer:dataPanzer});
-    }
+   
     if (keyUpDuration('KeyP',500)==true)
     {
         //let data = {};
@@ -2478,7 +2601,7 @@ function ControllKeyBoard()// редактировать карту
         //}
         //data = JSON.stringify({blockage:dataBlockage,panzer:dataPanzer});
         data = createDataLevel();
-        downloadAsFile(data)
+        downloadAsFile(data);
     }
     if (keyUpDuration('KeyL',500)==true)
     {

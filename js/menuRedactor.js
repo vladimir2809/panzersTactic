@@ -8,22 +8,26 @@
     this.yMenu = 0;
     this.y = 0;
     this.width = 350;
-    this.height = 350;
+    this.height = 380;
     this.widthOneItem = 200;
     this.heightOneItem = 40;
     this.dist = 15;
-    this.listSelect = ['Главное меню','Тест',/*'Сохранить', 'Загрузить',*/ 'Выход'];
+    this.listSelect = ['Главное меню','Тест','Сохранить', 'Загрузить', 'Выход'];
     this.numSelectHower = null;
     this.selectHower = null;
     this.messageBox = new MessageBox();
+    this.loadMap = false;
+    this.blocking = false;
     this.start=function()
     {
         //if (this.being==true)
         this.being = true;
+        this.blocking = false;
         this.y = screenHeight / 2 - this.height / 2;
         this.x = screenWidth / 2 - this.width / 2;
         this.xMenu =this.x+ this.width/2-this.widthOneItem/2;
-        this.yMenu = this.y+(this.listSelect.length)*(this.heightOneItem+this.dist)/2 ;
+        this.yMenu = this.y+this.height/2-(this.listSelect.length)*(this.heightOneItem+this.dist)/2 ;
+        this.yMenu += this.dist/2;
         this.timerId=setInterval(function(){
            if (menuRedactor.messageBox.being==false) 
            {
@@ -32,6 +36,31 @@
            else
            {
                menuRedactor.messageBox.update();
+               menuRedactor.messageBox.getSelect(function (value) {
+                   //console.log('select='+value);
+                   switch (value)
+                   {
+                       case 0:
+                        {
+                               data = createDataLevel();
+                               downloadAsFile(data);
+                               menuRedactor.messageBox.close()
+                               menuRedactor.close();
+                               mainMenu.start();
+                               break; 
+                       }
+                       case 1: 
+                       {
+                                menuRedactor.messageBox.close()
+                                menuRedactor.close();
+                                mainMenu.start();
+                                break; 
+                       }
+                       case 2: { menuRedactor.messageBox.close(); break; }
+                   }
+               });
+
+
            }
         },20);
     }
@@ -80,17 +109,20 @@
         let y = this.yMenu;
         this.numSelectHower = null;
         this.selectHower = null;
-        for (let i = 0;i<this.listSelect.length;i++)
+        if (this.blocking==false)
         {
-            if ( mX>x && mX<x+this.widthOneItem &&
-                mY>y+i*(this.heightOneItem+this.dist)&&
-                mY<y+i*(this.heightOneItem+this.dist)+ this.heightOneItem)
+            for (let i = 0;i<this.listSelect.length;i++)
             {
-                this.numSelectHower = i;
-                this.selectHower = this.listSelect[i];
+                if ( mX>x && mX<x+this.widthOneItem &&
+                    mY>y+i*(this.heightOneItem+this.dist)&&
+                    mY<y+i*(this.heightOneItem+this.dist)+ this.heightOneItem)
+                {
+                    this.numSelectHower = i;
+                    this.selectHower = this.listSelect[i];
+
+                }
 
             }
-
         }
         if (mouseLeftClick())
         {
@@ -104,6 +136,20 @@
                        // mainMenu.start();
                         break;
                     }
+                case 'Сохранить':
+                    {
+                        data = createDataLevel();
+                        downloadAsFile(data); 
+                        break;
+                    }
+                case 'Загрузить':
+                    {
+                        var formFile=document.getElementById("formFile");
+                        formFile.style.display="block";
+                        this.blocking = true;
+                       
+                    }
+                    break;
                 case 'Выход':
                     {
                         this.close();
@@ -113,32 +159,20 @@
                     {
                         this.close();
                         redactorMode = false;
+                        dataRAMLevel = [];
+                        dataRAMLevel = createDataLevel();
                         break;
                     }
             }
-           // ['Главное меню','Тест','Сохранить', 'Загрузить'/*, 'Помошь'*/, 'Выход'];
-            //switch(this.selectHower)
-            //{
-            //    case 'Играть': 
-            //    case 'Продолжить': 
-            //        {
-            //            this.close();
-            //            windowLevel.start();
-                        
-            //        }break;
-            //    case 'Редактор': 
-            //        {
-            //            this.close();
-            //            redactorMode = true;
-                        
-            //        }break;
-            //    case 'Авторы': 
-            //        {
-            //           // this.close();
-            //            this.authorScreen.start();
-                       
-            //        } break;
-            //    case 'Выход': window.close(); break;
-            }
+       
+        }   
+        if (this.loadMap==true && dataRAMLevel!=null)
+        {
+            this.loadMap = false;
+            loadGameMap(0,dataRAMLevel); 
+          //  alert(4545);
+            this.close();
+           
+        }
         }
 }

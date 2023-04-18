@@ -11,6 +11,7 @@ function MessageBox()
     this.fontButton = '25px Arial',
     this.fontHeader = '25px Arial',
     this.valueArr = [];
+    this.select = null;
     this.button={
         str:'',
         x:0,
@@ -115,11 +116,34 @@ function MessageBox()
             }
         }
     }
+    this.getSelect=function(callback)
+    {
+        if (this.select!=null)
+        {
+            let oldSelect = this.select;
+            this.select = null;
+            callback(oldSelect);
+        }
+    }
     this.update=function()
     {
         if (this.being==true)
         {
             //this.x++;
+            if (mouseLeftClick()==true)
+            {
+                for (let i = 0; i < this.buttonArr.length;i++)
+                {
+                    if (mouseX>this.buttonArr[i].x &&
+                        mouseX<this.buttonArr[i].x+this.buttonArr[i].width &&
+                        mouseY>this.buttonArr[i].y &&
+                        mouseY<this.buttonArr[i].y+this.buttonArr[i].height)
+                    {
+                        this.select = i;
+                    }
+                }
+                
+            }
         }
         
     }
