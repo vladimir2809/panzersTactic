@@ -7,6 +7,7 @@
     this.y = screenHeight/2-(this.height+interface.height)/2;
     this.timerId = null;
     this.SledersX = 500;
+    this.messageBox = new MessageBox();
     this.volume = {
         slider:null,
         x:20,
@@ -59,7 +60,40 @@
         this.being = true;
         this.buttonMainMenu.text = levelBeingRedactor == false ? 'Выйти в главное меню' : 'Выйти в редактор';
         this.timerId=setInterval(function(){
-           settings.update(); 
+            if (settings.messageBox.being==false)
+            {
+                settings.update(); 
+            }
+            else
+            {
+                settings.messageBox.update();
+                settings.messageBox.getSelect(function (value) {
+                    //console.log('select='+value);
+                    switch (value) {
+                        case 0:
+                            {
+                                settings.close();
+                                autoGame = false;
+                                if (levelBeingRedactor == false) {
+                                    mainMenu.start();
+                                }
+                                else {
+
+                                    exitInRedactor();
+                                    //searchRoute.deleteData();
+
+                                    //interface.select.type = null;
+                                    //interface.select.num = null;
+                                    loadGameMap(0, dataRAMLevel);
+                                    //redactorMode = true;
+                                }
+                                settings.messageBox.close();
+                                break;
+                            }
+                        case 1: { settings.messageBox.close(); break; }
+                    }
+                });
+            }
         },30);
     }
     this.close=function()
@@ -109,6 +143,7 @@
             this.volume.slider.draw();
             this.speedMotion.slider.draw();
             this.toggle.draw();
+            settings.messageBox.draw();
         }
     }
     this.update=function ()
@@ -120,21 +155,29 @@
             {
                 saveDataStorage();
                 this.close();
+             
             } 
             if (checkInObj(this.buttonMainMenu,mouseX,mouseY)==true)
-            {
-                this.close();
-                autoGame = false;
-                if (levelBeingRedactor==false)
-                {
-                    mainMenu.start();
-                }
-                else
-                {
-                    //searchRoute.deleteData();
-                    loadGameMap(0,dataRAMLevel);
-                    redactorMode = true;
-                }
+            { 
+                this.messageBox.start('Вы действительно хотите выйти?', ['Да','Нет']/*['да', 'нет',]*/);
+                this.messageBox.setOption({width:520});
+                //this.close();
+                //autoGame = false;
+                //if (levelBeingRedactor==false)
+                //{
+                //    mainMenu.start();
+                //}
+                //else
+                //{
+                    
+                //    exitInRedactor();
+                //    //searchRoute.deleteData();
+
+                //    //interface.select.type = null;
+                //    //interface.select.num = null;
+                //    loadGameMap(0,dataRAMLevel);
+                //    //redactorMode = true;
+                //}
                 
             }
             this.toggle.update(mouseCLick);

@@ -159,6 +159,8 @@
                     {
                         this.close();
                         redactorMode = false;
+                        dataRAMLevel = [];
+                        dataRAMLevel = createDataLevel();
                         break;
                     }
             }

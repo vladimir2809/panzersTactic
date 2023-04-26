@@ -8,7 +8,7 @@
     this.heightOneItem = 80;
     this.dist = 15;
     this.listSelectMain = redactorOpen==false?['Играть', 'Авторы'/*, 'Помошь'*/, 'Выход']:
-                                        ['Играть','Загрузить','Редактор', 'Авторы'/*, 'Помошь'*/, 'Выход'];
+                                        ['Играть'/*,'Загрузить'*/,'Редактор', 'Авторы'/*, 'Помошь'*/, 'Выход'];
     this.listSelectNewGame = ['Да', 'Нет'];
     this.selectHower = null;
     this.numSelectHower = null;
@@ -44,7 +44,7 @@
         let x = this.x;
         let y = this.y;
         context.fillStyle='rgb(0,0,0)';
-        context.fillRect(0,0,camera.width,camera.height);// очистка экрана
+        context.fillRect(0,0,screenWidth,screenHeight);// очистка экрана
         context.fillStyle='rgb(0,255,0)';
         let strHeader = 'Panzers Tactic';
         context.font = '80px Arial';
@@ -101,20 +101,29 @@
                         this.close();
                         redactorMode = false;
                         windowLevel.start();
+                        if (ADV.flagInGame==false)
+                        {
+                            ADV.flagInGame = true;
+                            adversting();
+                        }
                         
                     }break;
                 case 'Загрузить':
                     {
                         var formFile=document.getElementById("formFile");
                         formFile.style.display="block";
+                        redactorMode = false;
                         break;
                     }
                 
                 case 'Редактор': 
                     {
                         this.close();
-                        numSelectPanzer = null;
-                        redactorMode = true;
+                       // numSelectPanzer = null;
+                        exitInRedactor();
+                        //interface.select.type = null;
+                        //interface.select.num = null;
+                        //redactorMode = true;
                         
                     }break;
                 case 'Авторы': 

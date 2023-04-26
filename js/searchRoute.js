@@ -31,7 +31,7 @@ function SearchRoute()
             }
             this.map.push(arrWidth);
         }
-        console.log(this.map);
+       // console.log(this.map);
     }
     this.changeMapXY=function(xMap,yMap,value)
     {
@@ -46,7 +46,7 @@ function SearchRoute()
             arrElemCopy(buffer, this.map[i]);
             mapBuffer.push(buffer);
         }
-        console.log(mapBuffer);
+       // console.log(mapBuffer);
         return mapBuffer;
 
     }
