@@ -100,19 +100,29 @@
                     {
                         this.close();
                         redactorMode = false;
-                        windowLevel.start();
+                        
+                        if (checkDataStorage()==true)
+                        {
+                            readDataStorage();
+                        }
                         if (ADV.flagInGame==false)
                         {
                             ADV.flagInGame = true;
                             adversting();
                         }
-                        
+                        setTimeout(function () {
+                            windowLevel.start();
+                        }, 500);
                     }break;
                 case 'Загрузить':
                     {
                         var formFile=document.getElementById("formFile");
                         formFile.style.display="block";
                         redactorMode = false;
+                        if (checkDataStorage()==true)
+                        {
+                            readDataStorage();
+                        }
                         break;
                     }
                 

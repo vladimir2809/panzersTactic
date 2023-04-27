@@ -34,7 +34,7 @@ function Burst()
             spriteOne.height= this.spriteHeight;
             this.spriteArr.push(spriteOne);
         }
-        console.log(this.spriteArr);
+        //console.log(this.spriteArr);
     }
     this.start = function (xCentr,yCentr)
     {

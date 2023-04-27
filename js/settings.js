@@ -75,6 +75,7 @@
                                 settings.close();
                                 autoGame = false;
                                 if (levelBeingRedactor == false) {
+
                                     mainMenu.start();
                                 }
                                 else {
@@ -182,7 +183,7 @@
             }
             this.toggle.update(mouseCLick);
             autoStepEnd = this.toggle.valueOn;
-            console.log("ASE "+autoStepEnd);
+           // console.log("ASE "+autoStepEnd);
         }
         this.speedMotion.slider.update();
         speedMotionPanz = this.speedMotion.slider.value;
@@ -191,7 +192,7 @@
         
         volumeSound = this.volume.slider.value;
         audio.volume(volumeSound);
-        console.log(speedMotionPanz);
+   //     console.log(speedMotionPanz);
         this.volume.slider.clickBar(function () {
             audio.play('shot');
         });
@@ -279,7 +280,7 @@ function Slider(x,y,width,value,min,max)
                 }
                 this.value = this.min+((this.max - this.min) * (this.bar.x - this.x) / this.width);
             }
-            console.log(this.value);
+           // console.log(this.value);
             //if (this.countMousePress==null)
             //{
             //    this.countMousePress=1;

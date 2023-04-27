@@ -70,7 +70,7 @@ function MessageBox()
             this.buttonArr[i].width = Math.trunc(this.buttonArr[i].width);
             this.buttonArr[i].x = Math.trunc(this.buttonArr[i].x);
         }
-        console.log(this.buttonArr);
+        //console.log(this.buttonArr);
     }
     this.start=function(header,valueArr)
     {
