@@ -12,7 +12,7 @@
     this.widthOneItem = 200;
     this.heightOneItem = 40;
     this.dist = 15;
-    this.listSelect = ['Главное меню','Тест','Сохранить', 'Загрузить', 'Выход'];
+    this.listSelect = ['Тест','Главное меню',/*'Сохранить', 'Загрузить',*/ 'Выход'];
     this.numSelectHower = null;
     this.selectHower = null;
     this.messageBox = new MessageBox();
@@ -40,23 +40,23 @@
                    //console.log('select='+value);
                    switch (value)
                    {
-                       case 0:
-                        {
-                               data = createDataLevel();
-                               downloadAsFile(data);
-                               menuRedactor.messageBox.close()
-                               menuRedactor.close();
-                               mainMenu.start();
-                               break; 
-                       }
-                       case 1: 
+                       //case 0:
+                       // {
+                       //        data = createDataLevel();
+                       //        downloadAsFile(data);
+                       //        menuRedactor.messageBox.close()
+                       //        menuRedactor.close();
+                       //        mainMenu.start();
+                       //        break; 
+                       //}
+                       case 0: 
                        {
                                 menuRedactor.messageBox.close()
                                 menuRedactor.close();
                                 mainMenu.start();
                                 break; 
                        }
-                       case 2: { menuRedactor.messageBox.close(); break; }
+                       case 1: { menuRedactor.messageBox.close(); break; }
                    }
                });
 
@@ -131,25 +131,25 @@
                 case 'Главное меню':
                     {
                         //this.close();
-                        this.messageBox.start('Вы действительно хотите выйти?', ['сохранить','не сохранять','отмена']/*['да', 'нет',]*/);
+                        this.messageBox.start('Вы действительно хотите выйти?', ['Да','Нет']/*['да', 'нет',]*/);
                         this.messageBox.setOption({width:520});
                        // mainMenu.start();
                         break;
                     }
-                case 'Сохранить':
-                    {
-                        data = createDataLevel();
-                        downloadAsFile(data); 
-                        break;
-                    }
-                case 'Загрузить':
-                    {
-                        var formFile=document.getElementById("formFile");
-                        formFile.style.display="block";
-                        this.blocking = true;
+                //case 'Сохранить':
+                //    {
+                //        data = createDataLevel();
+                //        downloadAsFile(data); 
+                //        break;
+                //    }
+                //case 'Загрузить':
+                //    {
+                //        var formFile=document.getElementById("formFile");
+                //        formFile.style.display="block";
+                //        this.blocking = true;
                        
-                    }
-                    break;
+                //    }
+                //    break;
                 case 'Выход':
                     {
                         this.close();

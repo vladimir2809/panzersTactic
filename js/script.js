@@ -51,7 +51,7 @@ var saveSelect = {numPanz:null,flag:false};
 var quantityPanzInCommand = [0, 0];
 var levelGameOpen = [1,]// список открытых уровней
 
-for (let i = 2; i <= 4; i++) levelGameOpen.push(i);
+for (let i = 2; i <= 1; i++) levelGameOpen.push(i);
 
 var redactorOpen = true;
 var redactorMode = false;

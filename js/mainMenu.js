@@ -7,8 +7,8 @@
     this.widthOneItem = 380;
     this.heightOneItem = 80;
     this.dist = 15;
-    this.listSelectMain = redactorOpen==false?['Играть', 'Авторы'/*, 'Помошь'*/, 'Выход']:
-                                        ['Играть'/*,'Загрузить'*/,'Редактор', 'Авторы'/*, 'Помошь', 'Выход'*/];
+    this.listSelectMain = redactorOpen==false?['Играть', /*'Авторы', 'Помошь', 'Выход'*/]:
+                                        ['Играть'/*,'Загрузить'*/,'Редактор', /*'Авторы', 'Помошь', 'Выход'*/];
     this.listSelectNewGame = ['Да', 'Нет'];
     this.selectHower = null;
     this.numSelectHower = null;
@@ -27,7 +27,7 @@
         {
             this.listSelectMain[0] = 'Продолжить';
         }
-        this.y=280;
+        this.y=320;
         this.x = screenWidth/2-this.widthOneItem/2;
         this.timerId=setInterval(function(){
           if (mainMenu.authorScreen.being==false) mainMenu.update(); 
