@@ -969,13 +969,14 @@ window.addEventListener('load', function () {
         reader.readAsText(fileOne);
         reader.onload = function() {
           //objMap.loadMap(JSON.parse(reader.result));
-            dataRAMLevel = reader.result;//JSON.parse(reader.result);
+           
            // console.log(dataRAMLevel);
             if (menuRedactor.loadMap!=undefined)
             {
                 menuRedactor.loadMap = true;
                // alert(111);
             }
+            dataRAMLevel = reader.result;//JSON.parse(reader.result);
         // alert(reader.result);
         }
         reader.onerror = function() {
@@ -2774,34 +2775,60 @@ function ControllKeyBoard()// редактировать карту
 
     
 }
+function isJSONString(str) {
+    try {
+        JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
+    return true;
+}
 function loadGameMap(numMap,dataRAM=null)
 {
-    while (blockageArr.length > 0) blockageArr.splice(0,1);
-    while (panzerArr.length > 0) panzerArr.splice(0,1);
+   
     searchRoute.deleteData();
     deleteListBackStep();
     numSelectPanzer = null;
     numCommandStep = 0;
-    let data = dataRAM==null?mapArr[numMap]:JSON.parse(dataRAM);
-    for (let i = 0; i < data.panzer.length;i++)
+   // let nullData = '{ "blockage": [], "panzer": [] }';
+    let flagJSON = isJSONString(dataRAM);
+    if (flagJSON == false) 
     {
-        var panzer = new Panzer(data.panzer[i].command,/*randomInteger(0,2)*/data.panzer[i].type, 
-                        data.panzer[i].xMap, data.panzer[i].yMap);
-        panzer.being = true;
-        panzer.lineArr=calcLineArr(panzer,'panzer',i);
-        // panzer.draw(context,camera,1);
-        panzerArr.push(panzer);
-    
-       // console.log(panzerArr);
+       // dataRAM = nullData;
+        alert('Неверный формат файла.');
     }
-    for (let i = 0; i < data.blockage.length;i++)// создать препятствия
-    {
+    else
+    //if (flagJSON==true)
+    { 
+        let data = dataRAM==null?mapArr[numMap]:JSON.parse(dataRAM);
+        while (blockageArr.length > 0) blockageArr.splice(0,1);
+        while (panzerArr.length > 0) panzerArr.splice(0,1);
+        if (Array.isArray(data.panzer)==true)
+        {
+            for (let i = 0; i < data.panzer.length;i++)
+            {
+                var panzer = new Panzer(data.panzer[i].command,/*randomInteger(0,2)*/data.panzer[i].type, 
+                                data.panzer[i].xMap, data.panzer[i].yMap);
+                panzer.being = true;
+                panzer.lineArr=calcLineArr(panzer,'panzer',i);
+                // panzer.draw(context,camera,1);
+                panzerArr.push(panzer);
+    
+                // console.log(panzerArr);
+            }
+        }
+        if (Array.isArray(data.blockage)==true)
+        {
+            for (let i = 0; i < data.blockage.length;i++)// создать препятствия
+            {
         
-        var blockage = new Blockage(data.blockage[i].type,
-                            data.blockage[i].xMap,data.blockage[i].yMap)
-        // panzer.draw(context,camera,1);
-        blockage.lineArr=calcLineArr(blockage);
-        blockageArr.push(blockage);
+                var blockage = new Blockage(data.blockage[i].type,
+                                    data.blockage[i].xMap,data.blockage[i].yMap)
+                // panzer.draw(context,camera,1);
+                blockage.lineArr=calcLineArr(blockage);
+                blockageArr.push(blockage);
+            }
+        }
     }
     updateMapSearchRoute();
 }

@@ -12,7 +12,7 @@
     this.widthOneItem = 200;
     this.heightOneItem = 40;
     this.dist = 15;
-    this.listSelect = ['Тест','Главное меню',/*'Сохранить', 'Загрузить',*/ 'Выход'];
+    this.listSelect = ['Тест','Главное меню','Сохранить', 'Загрузить', 'Выход'];
     this.numSelectHower = null;
     this.selectHower = null;
     this.messageBox = new MessageBox();
@@ -40,23 +40,28 @@
                    //console.log('select='+value);
                    switch (value)
                    {
-                       //case 0:
-                       // {
-                       //        data = createDataLevel();
-                       //        downloadAsFile(data);
-                       //        menuRedactor.messageBox.close()
-                       //        menuRedactor.close();
-                       //        mainMenu.start();
-                       //        break; 
-                       //}
-                       case 0: 
+                       case 0:
+                        {
+                               //data = createDataLevel();
+                               //downloadAsFile(data);
+                               saveMap();
+                               if (checkPower2Command()==true)
+                               {
+                                 
+                                   menuRedactor.close();
+                                   mainMenu.start();
+                               } 
+                               menuRedactor.messageBox.close();
+                               break; 
+                       }
+                       case 1: 
                        {
                                 menuRedactor.messageBox.close()
                                 menuRedactor.close();
                                 mainMenu.start();
                                 break; 
                        }
-                       case 1: { menuRedactor.messageBox.close(); break; }
+                       case 2: { menuRedactor.messageBox.close(); break; }
                    }
                });
 
@@ -131,25 +136,26 @@
                 case 'Главное меню':
                     {
                         //this.close();
-                        this.messageBox.start('Вы действительно хотите выйти?', ['Да','Нет']/*['да', 'нет',]*/);
+                        this.messageBox.start('Вы действительно хотите выйти?', ['Сохранить','Не сохранять',"Отмена"]/*['да', 'нет',]*/);
                         this.messageBox.setOption({width:520});
                        // mainMenu.start();
                         break;
                     }
-                //case 'Сохранить':
-                //    {
-                //        data = createDataLevel();
-                //        downloadAsFile(data); 
-                //        break;
-                //    }
-                //case 'Загрузить':
-                //    {
-                //        var formFile=document.getElementById("formFile");
-                //        formFile.style.display="block";
-                //        this.blocking = true;
+                case 'Сохранить':
+                    {
+                        saveMap();
+                     //   data = createDataLevel();
+                       //downloadAsFile(data); 
+                        break;
+                    }
+                case 'Загрузить':
+                    {
+                        var formFile=document.getElementById("formFile");
+                        formFile.style.display="block";
+                        this.blocking = true;
                        
-                //    }
-                //    break;
+                    }
+                    break;
                 case 'Выход':
                     {
                         this.close();
@@ -175,4 +181,31 @@
            
         }
         }
+}
+function saveMap()
+{
+    if (checkPower2Command()==true)
+    {
+        data = createDataLevel();
+        downloadAsFile(data);
+    }
+    else
+    {
+        alert ('На карте должен быть минимум один зеленый и красный танк.')
+    }
+    
+}
+function checkPower2Command()
+{
+    powerCommand0 = 0;
+    powerCommand1 = 0;
+    for (let i = 0; i < panzerArr.length;i++)
+    {
+        if (panzerArr[i].being==true)
+        {
+            if (panzerArr[i].command == 0) powerCommand0 += panzerArr[i].HP * panzerArr[i].DMG;
+            if (panzerArr[i].command == 1) powerCommand1 += panzerArr[i].HP * panzerArr[i].DMG;
+        }
+    }
+    if (powerCommand0 > 0 && powerCommand1 > 0) return true; else return false;
 }
