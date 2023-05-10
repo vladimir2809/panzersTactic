@@ -63,6 +63,7 @@ var audio = null;
 var volumeSound = 0.5;
 var countUpdate = 0;
 var burst;
+var flagStartWindowLevel = false;
 var ADV = {
     flagInGame: false,
     timerOn:false,
@@ -788,6 +789,11 @@ function BigText()// класс большой текст
         //pause=true;
     
     }
+    this.close=function()
+    {
+        this.being=false;
+        this.count = 0;
+    }
     this.control = function ()
     {
         if (this.being==true)
@@ -1283,6 +1289,10 @@ function drawAll()// нарисовать все
             }
         }
     }
+   
+    bigText.draw();
+    burst.draw();
+    settings.draw();
     if (redactorMode==true )
     {
         if (menuRedactor.being==true)
@@ -1318,10 +1328,6 @@ function drawAll()// нарисовать все
         }
        
     }
-    bigText.draw();
-    burst.draw();
-    settings.draw();
-   
 }
 function drawPanzer(x,y,type,command)
 {
@@ -2795,7 +2801,8 @@ function loadGameMap(numMap,dataRAM=null)
     if (flagJSON == false) 
     {
        // dataRAM = nullData;
-        alert('Неверный формат файла.');
+       // alert('Неверный формат файла.');
+        menuRedactor.loadMapTrue = false;
     }
     else
     //if (flagJSON==true)

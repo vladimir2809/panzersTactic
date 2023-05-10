@@ -111,6 +111,7 @@
                             adversting();
                         }
                         setTimeout(function () {
+                            //flagStartWindowLevel = true;
                             windowLevel.start();
                         }, 500);
                     }break;

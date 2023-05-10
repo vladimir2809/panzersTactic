@@ -75,14 +75,15 @@
                                 settings.close();
                                 autoGame = false;
                                 if (levelBeingRedactor == false) {
-
+                                    bigText.close();
                                     mainMenu.start();
+                                    
                                 }
                                 else {
-
+                                    bigText.close();
                                     exitInRedactor();
                                     //searchRoute.deleteData();
-
+                                   
                                     //interface.select.type = null;
                                     //interface.select.num = null;
                                     loadGameMap(0, dataRAMLevel);

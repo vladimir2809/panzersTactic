@@ -17,6 +17,7 @@
     this.selectHower = null;
     this.messageBox = new MessageBox();
     this.loadMap = false;
+    this.loadMapTrue = true;
     this.blocking = false;
     this.start=function()
     {
@@ -163,24 +164,45 @@
                     }
                 case 'Тест':
                     {
-                        this.close();
-                        redactorMode = false;
-                        dataRAMLevel = [];
-                        dataRAMLevel = createDataLevel();
+                        if (checkPower2Command()==true)
+                        {
+                            
+                            redactorMode = false;
+                            dataRAMLevel = [];
+                            dataRAMLevel = createDataLevel();  
+                            this.close();
+                        }
+                        else
+                        {
+                            alert ('На карте должен быть минимум один зеленый и красный танк.')
+                        }
+                    
                         break;
                     }
             }
        
         }   
-        if (this.loadMap==true && dataRAMLevel!=null)
+        //if (/*this.loadMap==true &&*/ this.loadMapTrue == false)
+        //{
+        //    this.loadMapTrue = true;
+        //    alert('Неверный формат файла.');
+        //}
+        if (this.loadMap==true && dataRAMLevel!=null )
         {
             this.loadMap = false;
-            loadGameMap(0,dataRAMLevel); 
-          //  alert(4545);
-            this.close();
-           
+            loadGameMap(0,dataRAMLevel);
+            if (this.loadMapTrue == false)
+            {
+                this.loadMapTrue = true;
+                this.blocking = false;
+                alert('Неверный формат файла.');
+            }
+            else
+            {
+                this.close();
+            } 
         }
-        }
+    }
 }
 function saveMap()
 {
